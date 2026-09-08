@@ -165,6 +165,17 @@ if 'selected_facility' not in st.session_state:
     st.session_state['selected_facility'] = 'stage'
 if 'facilities' not in st.session_state:
     st.session_state['facilities'] = DEFAULT_FACILITIES.copy()
+
+# 이전 세션 상태가 보존되어 있을 경우 구버전 dict 구조를 최신 3D 필드로 자동 보완
+if 'facilities' in st.session_state:
+    for k, v in DEFAULT_FACILITIES.items():
+        if k not in st.session_state['facilities']:
+            st.session_state['facilities'][k] = v.copy()
+        else:
+            for field, val in v.items():
+                if field not in st.session_state['facilities'][k]:
+                    st.session_state['facilities'][k][field] = val
+
 if 'view_mode' not in st.session_state:
     st.session_state['view_mode'] = '3D_ISO' # 3D_ISO, 2D_PLAN, 3D_WALK
 if 'lighting_mode' not in st.session_state:
@@ -493,7 +504,13 @@ elif st.session_state['page'] == 'dashboard':
                 stroke_w = "4" if is_sel else "1.5"
 
                 x, y, w, h = f['x'], f['y'], f['w'], f['h']
-                h3d = f['height_3d']
+                h3d = f.get('height_3d', 20)
+                hex_side = f.get('hex_side', f.get('hex', '#3B82F6'))
+                hex_top = f.get('hex_top', f.get('hex', '#60A5FA'))
+                icon = f.get('icon', '🎪')
+                w_m = f.get('w_m', 15)
+                h_m = f.get('h_m', 10)
+                h_3d_m = f.get('h_3d_m', 3)
 
                 if mode == '3D_ISO':
                     # Isometric 3D Box Construction
@@ -511,7 +528,7 @@ elif st.session_state['page'] == 'dashboard':
                              L {x + w//2} {top_y + h//2} 
                              L {x + w//2} {y + h//2} 
                              L {x - w//2} {y + h//2} Z" 
-                          fill="{f['hex_side']}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                          fill="{hex_side}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
                     """
 
                     # 3D Side Face (Right)
@@ -520,7 +537,7 @@ elif st.session_state['page'] == 'dashboard':
                              L {x + w//2 + 20} {top_y - h//2 + 10} 
                              L {x + w//2 + 20} {y - h//2 + 10} 
                              L {x + w//2} {top_y + h//2} Z" 
-                          fill="{f['hex_side']}" fill-opacity="0.8" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                          fill="{hex_side}" fill-opacity="0.8" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
                     """
 
                     # 3D Top Face
@@ -529,7 +546,7 @@ elif st.session_state['page'] == 'dashboard':
                                      {x + w//2},{top_y - h//2} 
                                      {x + w//2},{top_y + h//2} 
                                      {x - w//2},{top_y + h//2}" 
-                             fill="{f['hex_top']}" stroke="{stroke_clr}" stroke-width="{stroke_w}" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.3))"/>
+                             fill="{hex_top}" stroke="{stroke_clr}" stroke-width="{stroke_w}" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.3))"/>
                     """
 
                     # Spotlight effect for stage in night mode
@@ -542,8 +559,8 @@ elif st.session_state['page'] == 'dashboard':
                     # Label and metric text
                     label = f"""
                     <g transform="translate({x}, {top_y})">
-                        <text x="0" y="-8" fill="#FFFFFF" font-size="15" font-weight="900" text-anchor="middle" style="font-family: sans-serif; text-shadow: 0px 2px 4px rgba(0,0,0,0.8);">{f['icon']} {f['name']}</text>
-                        <text x="0" y="10" fill="#E2E8F0" font-size="11" font-weight="700" text-anchor="middle">{f['w_m']}m × {f['h_m']}m (높이 {f['h_3d_m']}m)</text>
+                        <text x="0" y="-8" fill="#FFFFFF" font-size="15" font-weight="900" text-anchor="middle" style="font-family: sans-serif; text-shadow: 0px 2px 4px rgba(0,0,0,0.8);">{icon} {f['name']}</text>
+                        <text x="0" y="10" fill="#E2E8F0" font-size="11" font-weight="700" text-anchor="middle">{w_m}m × {h_m}m (높이 {h_3d_m}m)</text>
                     </g>
                     """
 
@@ -555,16 +572,16 @@ elif st.session_state['page'] == 'dashboard':
                     <rect x="{x - w//2}" y="{y - h//2}" width="{w}" height="{h}" rx="8" fill="{f['hex']}" fill-opacity="0.85" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
                     <line x1="{x - w//2}" y1="{y - h//2}" x2="{x + w//2}" y2="{y + h//2}" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
                     <line x1="{x + w//2}" y1="{y - h//2}" x2="{x - w//2}" y2="{y + h//2}" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
-                    <text x="{x}" y="{y}" fill="#FFFFFF" font-size="14" font-weight="bold" text-anchor="middle">{f['icon']} {f['name']}</text>
-                    <text x="{x}" y="{y + 16}" fill="#CBD5E1" font-size="10" text-anchor="middle">{f['w_m']}m × {f['h_m']}m</text>
+                    <text x="{x}" y="{y}" fill="#FFFFFF" font-size="14" font-weight="bold" text-anchor="middle">{icon} {f['name']}</text>
+                    <text x="{x}" y="{y + 16}" fill="#CBD5E1" font-size="10" text-anchor="middle">{w_m}m × {h_m}m</text>
                     """
                     svg_items.append(plan_box)
 
                 else: # 3D_WALK - Viewer Perspective
                     cam_y = y * 0.7 + 120
                     walk_box = f"""
-                    <rect x="{x - w//2}" y="{cam_y - h3d*2}" width="{w}" height="{h3d*2.5}" rx="12" fill="{f['hex_top']}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
-                    <text x="{x}" y="{cam_y - h3d}" fill="#FFFFFF" font-size="16" font-weight="bold" text-anchor="middle">{f['icon']} {f['name']}</text>
+                    <rect x="{x - w//2}" y="{cam_y - h3d*2}" width="{w}" height="{h3d*2.5}" rx="12" fill="{hex_top}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                    <text x="{x}" y="{cam_y - h3d}" fill="#FFFFFF" font-size="16" font-weight="bold" text-anchor="middle">{icon} {f['name']}</text>
                     """
                     svg_items.append(walk_box)
 
@@ -638,14 +655,19 @@ elif st.session_state['page'] == 'dashboard':
             selected_key = st.session_state['selected_facility']
             current_fac = facs[selected_key]
             
+            w_m_val = current_fac.get('w_m', 15)
+            h_m_val = current_fac.get('h_m', 10)
+            h_3d_m_val = current_fac.get('h_3d_m', 3)
+            icon_val = current_fac.get('icon', '🎪')
+
             st.markdown("### 🏢 3D 시설 실측 데이터")
             st.markdown(f"""
                 <div class="reason-box">
-                    <h4 style="color: {current_fac['hex']}; margin-top: 0;">{current_fac['icon']} {current_fac['name']}</h4>
+                    <h4 style="color: {current_fac['hex']}; margin-top: 0;">{icon_val} {current_fac['name']}</h4>
                     <p style="color: #0F172A; font-size: 0.9rem; margin-bottom: 8px;">
-                        • <b>실제 가로×세로:</b> {current_fac['w_m']}m × {current_fac['h_m']}m<br>
-                        • <b>점유 면적:</b> {current_fac['w_m'] * current_fac['h_m']} ㎡<br>
-                        • <b>3D 입체 높이:</b> {current_fac['h_3d_m']}m 고도
+                        • <b>실제 가로×세로:</b> {w_m_val}m × {h_m_val}m<br>
+                        • <b>점유 면적:</b> {w_m_val * h_m_val} ㎡<br>
+                        • <b>3D 입체 높이:</b> {h_3d_m_val}m 고도
                     </p>
                     <hr style="margin: 8px 0; border: 0; border-top: 1px solid #BAE6FD;">
                     <p style="color: #334155; font-size: 0.9rem; line-height: 1.5; margin: 0;">
