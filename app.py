@@ -10,28 +10,50 @@ st.set_page_config(
     page_title="이벤트 아키텍트 AI - AI 기반 행사 자동 설계 플랫폼",
     page_icon="🎪",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
     <style>
-    /* 전체 배경 및 폰트 - 라이트 모드 적용 */
+    /* 전체 배경 및 폰트 - 화사한 라이트 모드 적용 */
     .stApp {
         background-color: #F8FAFC;
         color: #0F172A;
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     }
     
-    /* 상단 네비게이션 및 헤더 */
-    div[data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E2E8F0;
-    }
-    div[data-testid="stSidebar"] * {
-        color: #1E293B !important;
+    /* 상단 네비게이션 헤더 */
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        background-color: #FFFFFF;
+        border-bottom: 1px solid #E2E8F0;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
 
-    /* 카드 스타일링 */
+    /* 홈 대형 카드 디자인 */
+    .home-card {
+        background: #FFFFFF;
+        border: 2px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 36px 28px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        cursor: pointer;
+        height: 100%;
+    }
+    .home-card:hover {
+        border-color: #2563EB;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(37, 99, 235, 0.12);
+    }
+    
+    /* 카드 및 패널 스타일 */
     .custom-card {
         background-color: #FFFFFF;
         border-radius: 16px;
@@ -41,92 +63,73 @@ st.markdown("""
         margin-bottom: 16px;
     }
 
-    /* 우측 지표 카드 디자인 (이미지 매칭) */
-    .metric-card-green {
-        background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-        color: white;
+    /* 배치 사유 패널 하이라이트 */
+    .reasoning-box {
+        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+        border: 1px solid #93C5FD;
         border-radius: 14px;
-        padding: 16px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        padding: 18px;
+        color: #1E3A8A;
+        margin-top: 10px;
     }
 
-    .metric-card-yellow {
-        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
-        color: white;
-        border-radius: 14px;
-        padding: 16px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-    }
-
-    .metric-card-blue {
-        background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-        color: white;
-        border-radius: 14px;
-        padding: 16px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-
-    .pill-stat-blue {
-        background-color: #EFF6FF;
-        border: 1px solid #BFDBFE;
-        color: #1D4ED8;
+    /* 지표 알약 바 */
+    .pill-stat {
+        background-color: #F1F5F9;
+        border: 1px solid #CBD5E1;
         border-radius: 12px;
-        padding: 12px;
+        padding: 10px;
         text-align: center;
         font-weight: bold;
     }
 
-    .pill-stat-yellow {
-        background-color: #FEF3C7;
-        border: 1px solid #FDE68A;
-        color: #B45309;
-        border-radius: 12px;
-        padding: 12px;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .opt-badge {
-        background-color: #065F46;
-        color: #FFFFFF;
-        padding: 10px 16px;
-        border-radius: 20px;
-        font-weight: bold;
-        text-align: center;
-        display: inline-block;
-        width: 100%;
-        box-shadow: 0 4px 10px rgba(6, 95, 70, 0.2);
-    }
-
-    /* 상단 버튼 스타일 */
-    .stButton>button {
-        border-radius: 10px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
-    /* 입력 폼 투명 배경 */
-    .stTextInput input, .stSelectbox select {
+    /* 입력 폼 디자인 */
+    .stTextInput input, .stSelectbox select, .stNumberInput input {
         background-color: #FFFFFF !important;
         border: 1px solid #CBD5E1 !important;
         color: #0F172A !important;
         border-radius: 10px !important;
     }
+
+    /* 기본 버튼 커스텀 */
+    .stButton>button {
+        border-radius: 10px;
+        font-weight: 600;
+    }
     </style>
 """, unsafe_allow_html=True)
 
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'  # 'home', 'dashboard', 'report', 'settings', 'login'
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'user_name' not in st.session_state:
+    st.session_state['user_name'] = "홍길동 기획관"
+if 'design_generated' not in st.session_state:
+    st.session_state['design_generated'] = False
+if 'simulation_active' not in st.session_state:
+    st.session_state['simulation_active'] = True
+if 'selected_facility' not in st.session_state:
+    st.session_state['selected_facility'] = "무대"
+
+# 기본 이벤트 정보 상태
+if 'event_name' not in st.session_state:
+    st.session_state['event_name'] = "2026 충남 청춘 문화 축제"
+if 'event_purpose' not in st.session_state:
+    st.session_state['event_purpose'] = "축제/공연"
+if 'visitor_count' not in st.session_state:
+    st.session_state['visitor_count'] = 5000
+if 'budget' not in st.session_state:
+    st.session_state['budget'] = "5,000만원"
+if 'venue' not in st.session_state:
+    st.session_state['venue'] = "논산 시민공원 야외광장 (논산시)"
+
+if 'chat_messages' not in st.session_state:
+    st.session_state['chat_messages'] = [
+        {"role": "assistant", "content": "안녕하세요! AI 공간 설계 어시스턴트입니다. 원하시는 배치를 말씀하시면 디지털 트윈 상에서 즉시 최적화해 드립니다."}
+    ]
+
+# 충남 장소 데이터베이스
 CHUNGNAM_VENUES = {
     "논산 시민공원 야외광장 (논산시)": {
         "type": "공원/야외", "address": "충청남도 논산시 관촉로 67",
@@ -152,511 +155,518 @@ CHUNGNAM_VENUES = {
         "type": "공원/야외", "address": "충청남도 홍성군 홍북읍 충남대로 21",
         "width_m": 150, "height_m": 90, "max_capacity": 8000,
         "description": "도청 앞 초대형 수변 광장으로 가변 부스 배치가 용이한 대규모 부지"
-    },
-    "서산시민체육관 (서산시)": {
-        "type": "체육관/실내", "address": "충청남도 서산시 안견로 361",
-        "width_m": 55, "height_m": 35, "max_capacity": 2000,
-        "description": "서산시 소재 구내 체육 행사 및 지역 주민 문화 축제 전용 체육관"
     }
 }
 
-# 기본 세션 상태 초기화
-if 'current_nav' not in st.session_state:
-    st.session_state['current_nav'] = '대시보드'
-if 'selected_venue' not in st.session_state:
-    st.session_state['selected_venue'] = "논산 시민공원 야외광장 (논산시)"
-if 'event_name' not in st.session_state:
-    st.session_state['event_name'] = "2026 충남 청춘 축제"
-if 'event_purpose' not in st.session_state:
-    st.session_state['event_purpose'] = "축제/공연"
-if 'visitor_count' not in st.session_state:
-    st.session_state['visitor_count'] = 5000
-if 'budget' not in st.session_state:
-    st.session_state['budget'] = "5,000만원"
-if 'is_after_mode' not in st.session_state:
-    st.session_state['is_after_mode'] = True  # 이전(Before) / 이후(After) 토글
-if 'chat_messages' not in st.session_state:
-    st.session_state['chat_messages'] = [
-        {"role": "assistant", "content": "안녕하세요! AI 공간 설계 조교입니다. '푸드존을 남쪽으로 이동해줘' 또는 '화장실을 의료 센터 옆으로 옮겨줘'라고 명령해 보세요."}
-    ]
+# 시설별 AI 배치 이유 상세 설명 DB
+FACILITY_REASONING = {
+    "무대": {
+        "icon": "🎭",
+        "title": "북측 시야 확보 및 메인 출입구 대치 배치",
+        "reason": "바람의 방향과 관람객 시야각을 고려하여 북쪽 상단 중심부에 배치했습니다. 입구에서 진입한 인원이 자연스럽게 중앙 무대를 중심으로 좌우에 분산되도록 유도합니다."
+    },
+    "푸드 존": {
+        "icon": "🍔",
+        "title": "남서쪽 주 동선 인근 및 환기 구역 배치",
+        "reason": "음식 조리 시 발생하는 연기와 냄새 배출이 쉬운 야외 바람길 상류(서쪽)에 배치했으며, 무대 인파와의 병목 현상을 방지하기 위해 40m 이상 이격했습니다."
+    },
+    "비상구": {
+        "icon": "🚨",
+        "title": "동측 외곽 및 넓은 진출입로 연계",
+        "reason": "소방차 및 구급차의 접근성이 우수한 외곽 도로와 직선으로 연결된 동쪽 및 남쪽 2개소에 수용 인원 기준 안전 규격(폭 4m 이상)으로 분산 배치했습니다."
+    },
+    "정보 센터": {
+        "icon": "ℹ️",
+        "title": "남측 주 진입로 전면 시가화 지역 연계",
+        "reason": "방문객이 행사장 입장 즉시 리플렛 및 길 안내를 받을 수 있도록 남쪽 정문 인근 통로 중앙에 배치했습니다."
+    },
+    "부스": {
+        "icon": "🎪",
+        "title": "중앙 순환형 동선 복도 단지 구성",
+        "reason": "관람객 흐름이 끊기지 않는 2열 도보 스트리트 형태(폭 6m)로 배치하여 부스 체류 시간을 극대화하고 체증을 최소화했습니다."
+    },
+    "화장실": {
+        "icon": "🚻",
+        "title": "남동측 위생 배수관 연계 및 오수 처리 용이 구역",
+        "reason": "상하수도 배관 인프라가 가까운 동남쪽 외곽에 배치하여 위생 안전을 확보하고, 메인 무대 음향 영향권을 벗어나 편안하게 이용 가능합니다."
+    },
+    "의료 센터": {
+        "icon": "🚑",
+        "title": "북동측 응급차량 골든타임 확보 구역",
+        "reason": "응급 환자 발생 시 앰뷸런스 진입이 즉시 가능한 외곽 도로 인접 지역에 위치하며, 무대 및 푸드존 양쪽 모두에서 1분 이내 접근 가능한 중앙 균형 위치입니다."
+    },
+    "휴식 구역": {
+        "icon": "☕",
+        "title": "동측 녹지 쉼터 및 소음 저감 구역",
+        "reason": "무대 소음 레벨이 60dB 이하로 감소하는 동쪽 녹지 공간에 배치하여 방문객들에게 쾌적한 피크닉 및 쉬는 공간을 제공합니다."
+    }
+}
 
-with st.sidebar:
-    st.markdown("### 🎪 **이벤트 아키텍트 AI**")
-    st.caption("AI 기반 행사 자동 설계 및 디지털 트윈")
-    st.divider()
+header_col1, header_col2 = st.columns([6, 4])
 
-    nav_options = ["대시보드", "이벤트 디자인", "디지털 트윈", "AI 시뮬레이션", "AI 보고서", "설정"]
-    st.session_state['current_nav'] = st.radio("메뉴 선택", nav_options, index=nav_options.index(st.session_state['current_nav']))
+with header_col1:
+    if st.button("🎪 **이벤트 아키텍트 AI**", type="tertiary"):
+        st.session_state['current_page'] = 'home'
+        st.rerun()
 
-    st.divider()
-    st.markdown("#### 📍 충남 장소/체육관 선택")
-    venue_choice = st.selectbox("장소 선택", list(CHUNGNAM_VENUES.keys()), index=list(CHUNGNAM_VENUES.keys()).index(st.session_state['selected_venue']))
-    st.session_state['selected_venue'] = venue_choice
-    
-    custom_search = st.text_input("🔍 학교/체육관 직접 검색", placeholder="예: 천안 서여자중학교 체육관")
-    if custom_search:
-        st.info(f"💡 '{custom_search}' 장소의 평면 및 동선 규격을 적용합니다.")
-
-    venue_data = CHUNGNAM_VENUES[st.session_state['selected_venue']]
-    st.markdown(f"""
-    <div style="background:#F1F5F9; padding:12px; border-radius:10px; font-size:0.85rem; border:1px solid #CBD5E1;">
-        <div><b>유형:</b> {venue_data['type']}</div>
-        <div><b>규격:</b> {venue_data['width_m']}m × {venue_data['height_m']}m</div>
-        <div><b>수용 인원:</b> {venue_data['max_capacity']:,}명</div>
-        <div style="color:#64748B; margin-top:4px;">{venue_data['description']}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("### 🏛️ AI 행사 공간 설계 대시보드")
-
-# 상단 입력 필드 및 버튼 바 (이미지 상단 배치 매칭)
-top_col1, top_col2, top_col3, top_col4, top_col5, top_col6 = st.columns([1.5, 1.2, 1.2, 1.0, 1.5, 1.6])
-
-with top_col1:
-    st.text_input("이벤트 이름", value=st.session_state['event_name'], key="input_ev_name")
-with top_col2:
-    st.selectbox("이벤트 목적", ["축제/공연", "박람회/전시", "학술/대회", "체육 대회"], key="input_ev_purpose")
-with top_col3:
-    st.number_input("예상 방문객 수", value=st.session_state['visitor_count'], step=500, key="input_ev_visitors")
-with top_col4:
-    st.text_input("예산", value=st.session_state['budget'], key="input_ev_budget")
-with top_col5:
-    st.selectbox("장소", list(CHUNGNAM_VENUES.keys()), index=0, key="input_ev_venue")
-with top_col6:
-    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-    if st.button("✨ AI 이벤트 디자인 생성", type="primary", use_container_width=True):
-        st.toast("AI가 최적화된 디지털 트윈 공간 조감도를 재구성했습니다!", icon="🚀")
+with header_col2:
+    top_btn_c1, top_btn_c2 = st.columns([1, 1])
+    with top_btn_c1:
+        if st.session_state['logged_in']:
+            if st.button(f"👤 {st.session_state['user_name']}", use_container_width=True):
+                st.session_state['current_page'] = 'settings'
+                st.rerun()
+        else:
+            if st.button("🔑 로그인 / 회원가입", use_container_width=True):
+                st.session_state['current_page'] = 'login'
+                st.rerun()
+    with top_btn_c2:
+        if st.button("⚙️ 설정", use_container_width=True):
+            st.session_state['current_page'] = 'settings'
+            st.rerun()
 
 st.divider()
 
-if st.session_state['current_nav'] == "대시보드":
+if st.session_state['current_page'] == 'home':
+    st.markdown("<h2 style='text-align: center; margin-bottom: 8px;'>AI 기반 행사 자동 설계 플랫폼</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748B; margin-bottom: 40px;'>디지털 트윈 기반 공간 자동 배치, 실시간 군중 동선 시뮬레이션 및 상사 보고서 자동 생성</p>", unsafe_allow_html=True)
+
+    col_home1, col_home2 = st.columns(2)
+
+    with col_home1:
+        st.markdown("""
+        <div class="home-card">
+            <div style="font-size: 3.5rem; margin-bottom: 16px;">🏛️</div>
+            <h2 style="color: #1E293B; margin-bottom: 12px;">AI 공간 설계 대시보드</h2>
+            <p style="color: #64748B; font-size: 0.95rem; line-height: 1.6;">
+                행사 사양을 입력하면 디지털 트윈 캔버스에 무대, 푸드존, 부스, 의료센터 등을 입체 자동 배치하고 AI 군중 동선을 시뮬레이션합니다.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("👉 대시보드 바로가기", type="primary", use_container_width=True, key="btn_to_dash"):
+            st.session_state['current_page'] = 'dashboard'
+            st.rerun()
+
+    with col_home2:
+        st.markdown("""
+        <div class="home-card">
+            <div style="font-size: 3.5rem; margin-bottom: 16px;">📋</div>
+            <h2 style="color: #1E293B; margin-bottom: 12px;">AI 종합 보고서</h2>
+            <p style="color: #64748B; font-size: 0.95rem; line-height: 1.6;">
+                최적화된 디지털 트윈 결과 및 안전·동선 평가 지표를 직장 상사 및 관계 부서에 즉시 제출할 수 있는 정식 보고서 형태로 자동 출력합니다.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("👉 AI 보고서 바로가기", type="secondary", use_container_width=True, key="btn_to_rep"):
+            st.session_state['current_page'] = 'report'
+            st.rerun()
+
+elif st.session_state['current_page'] == 'dashboard':
+    st.markdown("### 🏛️ AI 행사 공간 설계 대시보드")
     
-    col_center_canvas, col_right_metrics = st.columns([7.2, 2.8])
+    # 상단 입력 필드 바
+    in_col1, in_col2, in_col3, in_col4, in_col5, in_col6 = st.columns([1.5, 1.2, 1.2, 1.0, 1.5, 1.6])
+    
+    with in_col1:
+        st.session_state['event_name'] = st.text_input("이벤트 이름", value=st.session_state['event_name'])
+    with in_col2:
+        st.session_state['event_purpose'] = st.selectbox("이벤트 목적", ["축제/공연", "박람회/전시", "학술/대회", "체육 대회"])
+    with in_col3:
+        st.session_state['visitor_count'] = st.number_input("예상 방문객 수", value=st.session_state['visitor_count'], step=500)
+    with in_col4:
+        st.session_state['budget'] = st.text_input("예산", value=st.session_state['budget'])
+    with in_col5:
+        st.session_state['venue'] = st.selectbox("장소", list(CHUNGNAM_VENUES.keys()))
+    with in_col6:
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+        if st.button("✨ AI 이벤트 디자인 생성", type="primary", use_container_width=True):
+            st.session_state['design_generated'] = True
+            st.toast("AI가 장소 규격에 맞춰 최적의 3D 공간 배치를 완료했습니다!", icon="🚀")
+            st.rerun()
 
-    # ------------------ [중앙 2.5D ISOMETRIC 디지털 트윈 캔버스] ------------------
-    with col_center_canvas:
-        
-        # 이전/이후 모드 설정 및 캔버스 연동
-        is_after = st.session_state['is_after_mode']
+    st.divider()
 
-        canvas_js_code = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 0;
-                    background-color: #F8FAFC;
-                    font-family: 'Pretendard', system-ui, sans-serif;
-                    overflow: hidden;
-                }}
-                #canvasContainer {{
-                    position: relative;
-                    width: 100%;
-                    height: 580px;
-                    background: #FFFFFF;
-                    border-radius: 20px;
-                    border: 2px solid #E2E8F0;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-                }}
-                canvas {{
-                    display: block;
-                    width: 100%;
-                    height: 100%;
-                }}
-                
-                /* 상단 플로팅 배지 노드 (이미지 상의 노드들) */
-                .node-badge {{
-                    position: absolute;
-                    background: #FFFFFF;
-                    border: 1px solid #CBD5E1;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                    padding: 5px 12px;
-                    border-radius: 20px;
-                    font-size: 12px;
-                    font-weight: bold;
-                    color: #1E293B;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    z-index: 10;
-                }}
-                .node-dot {{
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background-color: #3B82F6;
-                }}
-                .node-dot-red {{ background-color: #EF4444; }}
+    # 메인 캔버스 및 레이아웃 영역
+    dash_left, dash_right = st.columns([7, 3])
 
-                /* 이전 / 이후 토글 스위치 (이미지 하단 매칭) */
-                .toggle-container {{
-                    position: absolute;
-                    bottom: 16px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #FFFFFF;
-                    border: 1px solid #CBD5E1;
-                    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-                    padding: 6px 16px;
-                    border-radius: 30px;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    font-size: 13px;
-                    font-weight: bold;
-                    z-index: 20;
-                }}
-                .switch {{
-                    position: relative;
-                    display: inline-block;
-                    width: 44px;
-                    height: 22px;
-                }}
-                .switch input {{ opacity: 0; width: 0; height: 0; }}
-                .slider {{
-                    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-                    background-color: #CBD5E1; transition: .3s; border-radius: 22px;
-                }}
-                .slider:before {{
-                    position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
-                    background-color: white; transition: .3s; border-radius: 50%;
-                }}
-                input:checked + .slider {{ background-color: #2563EB; }}
-                input:checked + .slider:before {{ transform: translateX(22px); }}
-            </style>
-        </head>
-        <body>
-            <div id="canvasContainer">
-                
-                <!-- 이미지와 동일한 위치의 AI 플로팅 노드 라벨들 -->
-                <div class="node-badge" style="top: 25px; left: 240px;">
-                    <div class="node-dot"></div> 군중 예측
-                </div>
-                <div class="node-badge" style="top: 60px; right: 220px;">
-                    <div class="node-dot"></div> AI 최적화
-                </div>
-                <div class="node-badge" style="bottom: 80px; left: 200px;">
-                    <div class="node-dot node-dot-red"></div> 군중 예측 🚨
-                </div>
-                <div class="node-badge" style="bottom: 70px; right: 240px;">
-                    <div class="node-dot"></div> 디지털 트윈
-                </div>
-
-                <canvas id="isoCanvas" width="950" height="580"></canvas>
+    with dash_left:
+        # 디자인 생성 전 빈 프레임과 생성 후 3D Isometric 캔버스 분기
+        if not st.session_state['design_generated']:
+            st.markdown("""
+            <div style="height: 520px; border: 2px dashed #CBD5E1; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #FFFFFF;">
+                <div style="font-size: 4rem; color: #94A3B8; margin-bottom: 12px;">📐</div>
+                <h3 style="color: #64748B; margin-bottom: 8px;">빈 공간 상태입니다</h3>
+                <p style="color: #94A3B8; font-size: 0.95rem;">상단의 이벤트 정보 입력 후 <b>[✨ AI 이벤트 디자인 생성]</b> 버튼을 누르면 디지털 트윈 3D 배치가 수행됩니다.</p>
             </div>
-
-            <script>
-                const canvas = document.getElementById('isoCanvas');
-                const ctx = canvas.getContext('2d');
-                
-                let isAfterMode = {str(is_after).lower()};
-
-                // 실시간 유입 군중 입자 설정
-                const particles = [];
-                const numParticles = 80;
-
-                for (let i = 0; i < numParticles; i++) {{
-                    particles.push({{
-                        x: 520 + (Math.random() - 0.5) * 30,
-                        y: 430 + (Math.random() - 0.5) * 20,
-                        progress: Math.random(),
-                        speed: 0.002 + Math.random() * 0.003,
-                        targetIndex: Math.floor(Math.random() * 4)
-                    }});
-                }}
-
-                // 2.5D Isometric 변환 좌표 계산 함수
-                function isoProject(x, y, z) {{
-                    const isoX = (x - y) * 0.75 + 475;
-                    const isoY = (x + y) * 0.38 - z + 120;
-                    return {{ x: isoX, y: isoY }};
-                }}
-
-                function drawIsometricBlock(x, y, w, h, z, colorTop, colorLeft, colorRight, label, icon) {{
-                    const p1 = isoProject(x, y, z);
-                    const p2 = isoProject(x + w, y, z);
-                    const p3 = isoProject(x + w, y + h, z);
-                    const p4 = isoProject(x, y + h, z);
-
-                    const p1_b = isoProject(x, y, 0);
-                    const p2_b = isoProject(x + w, y, 0);
-                    const p3_b = isoProject(x + w, y + h, 0);
-                    const p4_b = isoProject(x, y + h, 0);
-
-                    // 좌측 면
-                    ctx.fillStyle = colorLeft;
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p4.x, p4.y);
-                    ctx.lineTo(p4_b.x, p4_b.y);
-                    ctx.lineTo(p1_b.x, p1_b.y);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // 우측 면
-                    ctx.fillStyle = colorRight;
-                    ctx.beginPath();
-                    ctx.moveTo(p4.x, p4.y);
-                    ctx.lineTo(p3.x, p3.y);
-                    ctx.lineTo(p3_b.x, p3_b.y);
-                    ctx.lineTo(p4_b.x, p4_b.y);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // 상단 면
-                    ctx.fillStyle = colorTop;
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.lineTo(p3.x, p3.y);
-                    ctx.lineTo(p4.x, p4.y);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-                    ctx.stroke();
-
-                    // 텍스트 라벨
-                    if (label) {{
-                        const center = isoProject(x + w/2, y + h/2, z);
-                        ctx.fillStyle = "#FFFFFF";
-                        ctx.font = "bold 12px Pretendard, sans-serif";
-                        ctx.textAlign = "center";
-                        ctx.shadowColor = "rgba(0,0,0,0.5)";
-                        ctx.shadowBlur = 4;
-                        ctx.fillText((icon || "") + " " + label, center.x, center.y + 4);
-                        ctx.shadowBlur = 0;
+            """, unsafe_allow_html=True)
+        else:
+            sim_flag = str(st.session_state['simulation_active']).lower()
+            
+            # 3D Isometric HTML/JS Canvas
+            canvas_code = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ margin: 0; padding: 0; background: #F8FAFC; font-family: system-ui, sans-serif; overflow: hidden; }}
+                    #canvasContainer {{
+                        position: relative; width: 100%; height: 520px; background: #FFFFFF;
+                        border-radius: 20px; border: 2px solid #E2E8F0; box-shadow: 0 8px 24px rgba(0,0,0,0.05);
                     }}
-                }}
+                    canvas {{ display: block; width: 100%; height: 100%; }}
+                    .node-badge {{
+                        position: absolute; background: #FFFFFF; border: 1px solid #CBD5E1;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 4px 10px; border-radius: 16px;
+                        font-size: 11px; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 5px;
+                    }}
+                    .node-dot {{ width: 7px; height: 7px; border-radius: 50%; background-color: #3B82F6; }}
+                </style>
+            </head>
+            <body>
+                <div id="canvasContainer">
+                    <div class="node-badge" style="top: 20px; left: 220px;"><div class="node-dot"></div> 군중 동선 예측</div>
+                    <div class="node-badge" style="top: 50px; right: 200px;"><div class="node-dot"></div> AI 자동 최적화</div>
+                    <div class="node-badge" style="bottom: 40px; right: 220px;"><div class="node-dot"></div> 디지털 트윈 연동</div>
 
-                function drawScene() {{
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    <canvas id="isoCanvas" width="900" height="520"></canvas>
+                </div>
 
-                    // 1. 외곽 3D Wall (이미지 상의 네이비 입체 외벽)
-                    const wallColorTop = "#1E293B";
-                    const wallColorLeft = "#0F172A";
-                    const wallColorRight = "#334155";
-                    drawIsometricBlock(0, 0, 480, 20, 40, wallColorTop, wallColorLeft, wallColorRight, "", "");
-                    drawIsometricBlock(0, 0, 20, 360, 40, wallColorTop, wallColorLeft, wallColorRight, "", "");
+                <script>
+                    const canvas = document.getElementById('isoCanvas');
+                    const ctx = canvas.getContext('2d');
+                    let simActive = {sim_flag};
 
-                    // 2. 바닥 잔디/체육관 평면
-                    const pGround1 = isoProject(20, 20, 0);
-                    const pGround2 = isoProject(480, 20, 0);
-                    const pGround3 = isoProject(480, 360, 0);
-                    const pGround4 = isoProject(20, 360, 0);
-
-                    ctx.fillStyle = "#E2E8F0";
-                    ctx.beginPath();
-                    ctx.moveTo(pGround1.x, pGround1.y);
-                    ctx.lineTo(pGround2.x, pGround2.y);
-                    ctx.lineTo(pGround3.x, pGround3.y);
-                    ctx.lineTo(pGround4.x, pGround4.y);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // 그리드 라인 (밝고 모던한 느낌)
-                    ctx.strokeStyle = "#CBD5E1";
-                    ctx.lineWidth = 1;
-                    for (let step = 60; step < 460; step += 40) {{
-                        const lineStart = isoProject(step, 20, 0);
-                        const lineEnd = isoProject(step, 360, 0);
-                        ctx.beginPath(); ctx.moveTo(lineStart.x, lineStart.y); ctx.lineTo(lineEnd.x, lineEnd.y); ctx.stroke();
+                    const particles = [];
+                    for (let i = 0; i < 70; i++) {{
+                        particles.push({{
+                            progress: Math.random(),
+                            speed: 0.002 + Math.random() * 0.003,
+                            targetIndex: Math.floor(Math.random() * 4)
+                        }});
                     }}
 
-                    // 3. 주요 시설물 입체 배치 (이미지와 유사한 배치)
-                    
-                    // [무대/Stage] (북쪽 상단)
-                    drawIsometricBlock(60, 40, 110, 60, 30, "#312E81", "#1E1B4B", "#4338CA", "무대", "🎭");
-
-                    // [푸드 존 / Food Zone] (서쪽 - 이전 모드 시 병목 유발)
-                    const foodGlowColor = isAfterMode ? "rgba(59, 130, 246, 0.25)" : "rgba(239, 68, 68, 0.4)";
-                    const foodCenter = isoProject(100, 240, 0);
-                    
-                    // 혼잡도 Heatmap Glow
-                    ctx.fillStyle = foodGlowColor;
-                    ctx.beginPath();
-                    ctx.arc(foodCenter.x, foodCenter.y, isAfterMode ? 50 : 80, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    drawIsometricBlock(60, 220, 80, 70, 18, "#D97706", "#B45309", "#F59E0B", "푸드 존", "🍔");
-
-                    // [부스 / Booths] (중앙 통로 단지)
-                    for(let b = 0; b < 3; b++) {{
-                        drawIsometricBlock(200, 100 + b*60, 50, 40, 15, "#2563EB", "#1D4ED8", "#3B82F6", b === 1 ? "부스" : "", "🎪");
-                        drawIsometricBlock(270, 100 + b*60, 50, 40, 15, "#2563EB", "#1D4ED8", "#3B82F6", "", "");
+                    function isoProject(x, y, z) {{
+                        return {{
+                            x: (x - y) * 0.72 + 450,
+                            y: (x + y) * 0.36 - z + 110
+                        }};
                     }}
 
-                    // [휴식 구역 / Rest Area] (동쪽 잔디 쉼터)
-                    drawIsometricBlock(360, 40, 90, 80, 8, "#059669", "#047857", "#10B981", "휴식 구역", "☕");
+                    function drawIsometricBlock(x, y, w, h, z, colorTop, colorLeft, colorRight, label, icon) {{
+                        const p1 = isoProject(x, y, z);
+                        const p2 = isoProject(x + w, y, z);
+                        const p3 = isoProject(x + w, y + h, z);
+                        const p4 = isoProject(x, y + h, z);
 
-                    // [의료 센터 / Medical]
-                    drawIsometricBlock(280, 30, 60, 40, 16, "#059669", "#047857", "#34D399", "의료 센터", "🚑");
+                        const p1_b = isoProject(x, y, 0);
+                        const p2_b = isoProject(x + w, y, 0);
+                        const p3_b = isoProject(x + w, y + h, 0);
+                        const p4_b = isoProject(x, y + h, 0);
 
-                    // [정보 센터 / Info]
-                    drawIsometricBlock(220, 300, 50, 35, 12, "#D97706", "#B45309", "#FBBF24", "정보 센터", "ℹ️");
-
-                    // [화장실 / Toilets]
-                    drawIsometricBlock(380, 220, 60, 45, 14, "#475569", "#334155", "#64748B", "화장실", "🚻");
-
-                    // [비상구 / Exits]
-                    drawIsometricBlock(440, 140, 20, 40, 25, "#DC2626", "#991B1B", "#EF4444", "비상구", "🚨");
-
-                    // 4. 동선 유도선 및 실시간 군중 입자 (Particles)
-                    const targets = [
-                        isoProject(115, 70, 0),   // 무대
-                        isoProject(100, 255, 0),  // 푸드존
-                        isoProject(235, 160, 0),  // 부스
-                        isoProject(405, 80, 0)    // 휴식구역
-                    ];
-
-                    const startPos = isoProject(240, 340, 0);
-
-                    particles.forEach(p => {{
-                        p.progress += p.speed;
-                        if (p.progress >= 1.0) p.progress = 0;
-
-                        const target = targets[p.targetIndex];
-                        const currX = startPos.x + (target.x - startPos.x) * p.progress;
-                        const currY = startPos.y + (target.y - startPos.y) * p.progress;
-
+                        ctx.fillStyle = colorLeft;
                         ctx.beginPath();
-                        ctx.arc(currX, currY, 3, 0, Math.PI * 2);
-                        ctx.fillStyle = isAfterMode ? "#2563EB" : "#EF4444";
-                        ctx.fill();
-                    }});
+                        ctx.moveTo(p1.x, p1.y); ctx.lineTo(p4.x, p4.y); ctx.lineTo(p4_b.x, p4_b.y); ctx.lineTo(p1_b.x, p1_b.y);
+                        ctx.closePath(); ctx.fill();
 
-                    requestAnimationFrame(drawScene);
-                }}
+                        ctx.fillStyle = colorRight;
+                        ctx.beginPath();
+                        ctx.moveTo(p4.x, p4.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p3_b.x, p3_b.y); ctx.lineTo(p4_b.x, p4_b.y);
+                        ctx.closePath(); ctx.fill();
 
-                drawScene();
-            </script>
-        </body>
-        </html>
-        """
+                        ctx.fillStyle = colorTop;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
+                        ctx.closePath(); ctx.fill();
+                        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.stroke();
 
-        components.html(canvas_js_code, height=600)
+                        if (label) {{
+                            const center = isoProject(x + w/2, y + h/2, z);
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.font = "bold 11px system-ui, sans-serif";
+                            ctx.textAlign = "center";
+                            ctx.fillText((icon || "") + " " + label, center.x, center.y + 4);
+                        }}
+                    }}
 
-        # AI 실시간 자연어 명령 창
-        with st.expander("💬 AI 대화형 공간 재배치 어시스턴트", expanded=True):
-            chat_col1, chat_col2 = st.columns([8, 2])
-            with chat_col1:
-                cmd_input = st.text_input("원하는 배치를 자유롭게 명령하세요", placeholder="예: '푸드존을 남쪽으로 20m 이동해줘'", label_visibility="collapsed")
-            with chat_col2:
-                if st.button("배치 반영", type="primary", use_container_width=True):
-                    if cmd_input:
-                        st.session_state['chat_messages'].append({"role": "user", "content": cmd_input})
-                        st.session_state['chat_messages'].append({"role": "assistant", "content": f"✨ **반영 완료:** '{cmd_input}' 명령에 따라 디지털 트윈 동선을 재계산했습니다."})
+                    function render() {{
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        // 외벽
+                        drawIsometricBlock(0, 0, 460, 18, 35, "#1E293B", "#0F172A", "#334155", "", "");
+                        drawIsometricBlock(0, 0, 18, 340, 35, "#1E293B", "#0F172A", "#334155", "", "");
+
+                        // 바닥
+                        const g1 = isoProject(18, 18, 0); const g2 = isoProject(460, 18, 0);
+                        const g3 = isoProject(460, 340, 0); const g4 = isoProject(18, 340, 0);
+                        ctx.fillStyle = "#E2E8F0";
+                        ctx.beginPath(); ctx.moveTo(g1.x, g1.y); ctx.lineTo(g2.x, g2.y); ctx.lineTo(g3.x, g3.y); ctx.lineTo(g4.x, g4.y); ctx.closePath(); ctx.fill();
+
+                        // 격자
+                        ctx.strokeStyle = "#CBD5E1"; ctx.lineWidth = 1;
+                        for(let s = 60; s < 440; s += 40) {{
+                            const ls = isoProject(s, 18, 0); const le = isoProject(s, 340, 0);
+                            ctx.beginPath(); ctx.moveTo(ls.x, ls.y); ctx.lineTo(le.x, le.y); ctx.stroke();
+                        }}
+
+                        // 주요 시설
+                        drawIsometricBlock(50, 35, 110, 60, 28, "#312E81", "#1E1B4B", "#4338CA", "무대", "🎭");
+                        drawIsometricBlock(50, 210, 80, 70, 18, "#D97706", "#B45309", "#F59E0B", "푸드 존", "🍔");
+                        
+                        for(let b=0; b<3; b++) {{
+                            drawIsometricBlock(190, 90 + b*55, 45, 38, 14, "#2563EB", "#1D4ED8", "#3B82F6", b===1 ? "부스" : "", "🎪");
+                            drawIsometricBlock(255, 90 + b*55, 45, 38, 14, "#2563EB", "#1D4ED8", "#3B82F6", "", "");
+                        }}
+
+                        drawIsometricBlock(350, 35, 85, 75, 8, "#059669", "#047857", "#10B981", "휴식 구역", "☕");
+                        drawIsometricBlock(270, 28, 55, 38, 15, "#059669", "#047857", "#34D399", "의료 센터", "🚑");
+                        drawIsometricBlock(210, 280, 50, 35, 12, "#D97706", "#B45309", "#FBBF24", "정보 센터", "ℹ️");
+                        drawIsometricBlock(370, 200, 60, 42, 14, "#475569", "#334155", "#64748B", "화장실", "🚻");
+                        drawIsometricBlock(425, 130, 18, 38, 22, "#DC2626", "#991B1B", "#EF4444", "비상구", "🚨");
+
+                        // 인파 시뮬레이션 파티클
+                        if (simActive) {{
+                            const targets = [
+                                isoProject(105, 65, 0), isoProject(90, 245, 0),
+                                isoProject(222, 150, 0), isoProject(392, 72, 0)
+                            ];
+                            const startPos = isoProject(235, 320, 0);
+
+                            particles.forEach(p => {{
+                                p.progress += p.speed;
+                                if (p.progress >= 1.0) p.progress = 0;
+                                const t = targets[p.targetIndex];
+                                const cx = startPos.x + (t.x - startPos.x) * p.progress;
+                                const cy = startPos.y + (t.y - startPos.y) * p.progress;
+                                ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                                ctx.fillStyle = "#2563EB"; ctx.fill();
+                            }});
+                        }}
+
+                        requestAnimationFrame(render);
+                    }}
+                    render();
+                </script>
+            </body>
+            </html>
+            """
+            components.html(canvas_code, height=540)
+
+        # 캔버스 아래 시뮬레이션 및 시설 클릭 버튼
+        st.markdown("#### 🎯 시설 배치 사유 확인 및 시뮬레이션 제어")
+        
+        sim_col1, sim_col2 = st.columns([4, 6])
+        with sim_col1:
+            if st.button("🏃‍♂️ AI 군중 동선 시뮬레이션 (ON/OFF)", type="secondary", use_container_width=True):
+                st.session_state['simulation_active'] = not st.session_state['simulation_active']
+                st.rerun()
+
+        st.caption("아래 글자를 누르시면 해당 시설의 AI 자동 배치 근거 요약을 확인하실 수 있습니다:")
+        fac_cols = st.columns(8)
+        facility_list = ["무대", "푸드 존", "비상구", "정보 센터", "부스", "화장실", "의료 센터", "휴식 구역"]
+        
+        for idx, fac in enumerate(facility_list):
+            with fac_cols[idx]:
+                if st.button(fac, key=f"btn_fac_{fac}", use_container_width=True):
+                    st.session_state['selected_facility'] = fac
+                    st.rerun()
+
+        # 대화형 AI 통합 창
+        with st.expander("💬 AI 대화형 공간 디자인 조교", expanded=True):
+            chat_in1, chat_in2 = st.columns([8, 2])
+            with chat_in1:
+                user_cmd = st.text_input("디자인 명령 입력", placeholder="예: '푸드 존을 남쪽으로 15m 이동시키고 휴식 공간 늘려줘'", label_visibility="collapsed")
+            with chat_in2:
+                if st.button("요청 반영", type="primary", use_container_width=True):
+                    if user_cmd:
+                        st.session_state['chat_messages'].append({"role": "user", "content": user_cmd})
+                        st.session_state['chat_messages'].append({"role": "assistant", "content": f"✨ '{user_cmd}' 요청을 반영하여 디지털 트윈 배치를 재계산했습니다."})
+                        st.session_state['design_generated'] = True
                         st.rerun()
 
             for msg in st.session_state['chat_messages'][-2:]:
-                if msg["role"] == "user":
-                    st.chat_message("user").write(msg["content"])
-                else:
-                    st.chat_message("assistant").write(msg["content"])
+                st.chat_message(msg["role"]).write(msg["content"])
 
-    # ------------------ [우측 실시간 핵심 지표 대시보드 (이미지 2 우측 매칭)] ------------------
-    with col_right_metrics:
+    with dash_right:
+        # 우측: AI 요약 및 실시간 평가
+        selected = st.session_state['selected_facility']
+        fac_info = FACILITY_REASONING.get(selected, FACILITY_REASONING["무대"])
+
+        st.markdown(f"#### 💡 선택 시설: {fac_info['icon']} {selected}")
+        st.markdown(f"""
+        <div class="reasoning-box">
+            <div style="font-weight: bold; font-size: 1rem; margin-bottom: 6px;">📌 AI 배치 사유 요약</div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #1E40AF; margin-bottom: 8px;">{fac_info['title']}</div>
+            <div style="font-size: 0.85rem; line-height: 1.6; color: #334155;">{fac_info['reason']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.divider()
+
+        st.markdown("#### 📊 실시간 공간 지표 평가")
         
-        st.markdown("#### 📊 실시간 공간 평가")
-
-        # 1. 안전 점수 카드 (Green)
         st.markdown("""
-        <div class="metric-card-green">
-            <div>
-                <div style="font-size:0.85rem; opacity:0.9;">🛡️ 안전 점수</div>
-                <div style="font-size:0.75rem; opacity:0.8;">비상 대피로 확보</div>
+        <div class="custom-card" style="border-left: 6px solid #10B981;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:0.85rem; color:#64748B;">🛡️ 안전 점수</div>
+                    <div style="font-size:0.75rem; color:#94A3B8;">비상 대피로 확보 지수</div>
+                </div>
+                <div style="font-size:2rem; font-weight:bold; color:#059669;">94</div>
             </div>
-            <div style="font-size: 2.2rem; font-weight: 900;">94</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 2. 접근성 카드 (Yellow/Amber)
         st.markdown("""
-        <div class="metric-card-yellow">
-            <div>
-                <div style="font-size:0.85rem; opacity:0.9;">🚶‍♂️ 접근성</div>
-                <div style="font-size:0.75rem; opacity:0.8;">주요 시설 간 거리</div>
+        <div class="custom-card" style="border-left: 6px solid #F59E0B;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:0.85rem; color:#64748B;">🚶‍♂️ 접근성</div>
+                    <div style="font-size:0.75rem; color:#94A3B8;">주요 시설 평균 거동 거리</div>
+                </div>
+                <div style="font-size:2rem; font-weight:bold; color:#D97706;">96</div>
             </div>
-            <div style="font-size: 2.2rem; font-weight: 900;">96</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. 흐름 효율성 카드 (Blue)
         st.markdown("""
-        <div class="metric-card-blue">
-            <div>
-                <div style="font-size:0.85rem; opacity:0.9;">🔄 흐름 효율성</div>
-                <div style="font-size:0.75rem; opacity:0.8;">병목 현상 방지 지수</div>
+        <div class="custom-card" style="border-left: 6px solid #3B82F6;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:0.85rem; color:#64748B;">🔄 흐름 효율성</div>
+                    <div style="font-size:0.75rem; color:#94A3B8;">병목 방지 및 시야율</div>
+                </div>
+                <div style="font-size:2rem; font-weight:bold; color:#2563EB;">91</div>
             </div>
-            <div style="font-size: 2.2rem; font-weight: 900;">91</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 4. 하단 서브 알약 지표 (대기 시간 / 예산 효율성)
-        s_col1, s_col2 = st.columns(2)
-        with s_col1:
+        p_col1, p_col2 = st.columns(2)
+        with p_col1:
             st.markdown("""
-            <div class="pill-stat-blue">
-                <div style="font-size:0.75rem; color:#3B82F6;">대기 시간</div>
-                <div style="font-size:1.2rem; font-weight:bold;">-38%</div>
+            <div class="pill-stat">
+                <div style="font-size:0.75rem; color:#64748B;">대기 시간</div>
+                <div style="font-size:1.1rem; color:#2563EB;">-38% 감소</div>
             </div>
             """, unsafe_allow_html=True)
-        with s_col2:
+        with p_col2:
             st.markdown("""
-            <div class="pill-stat-yellow">
-                <div style="font-size:0.75rem; color:#D97706;">예산 효율성</div>
-                <div style="font-size:1.2rem; font-weight:bold;">+18%</div>
+            <div class="pill-stat">
+                <div style="font-size:0.75rem; color:#64748B;">예산 효율성</div>
+                <div style="font-size:1.1rem; color:#D97706;">+18% 절감</div>
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+elif st.session_state['current_page'] == 'report':
+    st.markdown("### 📋 직장 상사 및 정식 제출용 AI 보고서")
+    st.caption("이벤트 아키텍트 AI가 자동으로 작성한 행사 공간 설계 및 디지털 트윈 종합 보고서입니다.")
 
-        # 5. AI 권장 사항 체크리스트
-        st.markdown("""
-        <div class="custom-card">
-            <div style="font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #1E293B;">💡 AI 권장 사항</div>
-            <ul style="padding-left: 18px; margin: 0; font-size: 0.85rem; color: #475569; line-height: 1.8;">
-                <li>🚚 <b>푸드 존</b> 남쪽으로 이동 추천</li>
-                <li>🏕️ <b>휴식 구역</b> 2개 추가 권장</li>
-                <li>🎪 <b>무대 입구</b> 진입로 확장</li>
-                <li>ℹ️ <b>정보 센터</b> 정문 전면 이전</li>
-            </ul>
+    st.markdown("""
+    <div style="background:#FFFFFF; border:1px solid #CBD5E1; padding:30px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+        <div style="text-align:center; border-bottom:2px solid #0F172A; padding-bottom:16px; margin-bottom:24px;">
+            <h2 style="margin:0; color:#0F172A;">[결재 보고서] 행사 공간 설계 및 디지털 트윈 최적화 안</h2>
+            <p style="color:#64748B; margin-top:8px;">기획안 작성자: 홍길동 기획관 | 작성 일시: 2026년 9월 9일</p>
         </div>
-        """, unsafe_allow_html=True)
+        
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:0.9rem;">
+            <tr style="background:#F1F5F9;">
+                <td style="padding:10px; border:1px solid #CBD5E1; font-weight:bold; width:20%;">행사명</td>
+                <td style="padding:10px; border:1px solid #CBD5E1;">""" + st.session_state['event_name'] + """</td>
+                <td style="padding:10px; border:1px solid #CBD5E1; font-weight:bold; width:20%;">행사 목적</td>
+                <td style="padding:10px; border:1px solid #CBD5E1;">""" + st.session_state['event_purpose'] + """</td>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid #CBD5E1; font-weight:bold;">예상 방문객 수</td>
+                <td style="padding:10px; border:1px solid #CBD5E1;">""" + f"{st.session_state['visitor_count']:,}" + """ 명</td>
+                <td style="padding:10px; border:1px solid #CBD5E1; font-weight:bold;">설정 예산</td>
+                <td style="padding:10px; border:1px solid #CBD5E1;">""" + st.session_state['budget'] + """</td>
+            </tr>
+            <tr style="background:#F1F5F9;">
+                <td style="padding:10px; border:1px solid #CBD5E1; font-weight:bold;">대상 장소</td>
+                <td style="padding:10px; border:1px solid #CBD5E1;" colspan="3">""" + st.session_state['venue'] + """</td>
+            </tr>
+        </table>
 
-        # 6. 최적화 완료 상태 바
-        st.markdown("""
-        <div class="opt-badge">
-            🟢 93% 최적화된 레이아웃
-        </div>
-        """, unsafe_allow_html=True)
+        <h4>1. AI 디지털 트윈 최적화 요약</h4>
+        <p style="font-size:0.9rem; color:#334155; line-height:1.7;">
+            본 설계안은 군중 밀집도 예측 파티클 알고리즘을 기반으로 무대, 푸드존, 체험 부스, 휴식 구역 및 비상구를 최적 배치했습니다. 
+            기존 수동 배치 대비 <b>대기 시간을 38% 감소</b>시키고 <b>안전 대피 지수를 94점</b>으로 대폭 개선하였습니다.
+        </p>
 
-elif st.session_state['current_nav'] == "이벤트 디자인":
-    st.markdown("### 🎨 AI 이벤트 디자인 가이드")
-    st.info("이벤트 콘셉트 및 브랜드 테마 색상을 설정할 수 있습니다.")
+        <h4>2. 주요 핵심 지표</h4>
+        <ul>
+            <li><b>안전 점수:</b> 94점 (비상구 2개소 분산 배치 및 폭 4m 진출입로 확보)</li>
+            <li><b>접근성 평가:</b> 96점 (의료 센터 및 정보 센터 중심 연계)</li>
+            <li><b>동선 효율성:</b> 91점 (2열 도보 스트리트 단지 구성으로 병목 현상 해소)</li>
+        </ul>
 
-elif st.session_state['current_nav'] == "디지털 트윈":
-    st.markdown("### 🌐 디지털 트윈 현장 정밀 스캔")
-    st.success("충남 지역 선택 장소의 GIS 지형 정보 및 실내 평면도가 정밀하게 연동되어 있습니다.")
+        <h4>3. 상사 결재 및 종합 의견</h4>
+        <p style="font-size:0.9rem; color:#475569; background:#F8FAFC; padding:12px; border-radius:8px;">
+            "본 공간 배치는 국토교통부 행사 안전 가이드라인을 충족하며, 충남 지역 장소 규격에 맞추어 현장 실무 적용 준비가 완료되었습니다."
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-elif st.session_state['current_nav'] == "AI 시뮬레이션":
-    st.markdown("### 🏃‍♂️ AI 군중 동선 시뮬레이션 상세 분석")
-    st.caption("시간대별 인파 밀집도 그래프 및 병목 구역 예측 데이터입니다.")
-    
-    df_sim = pd.DataFrame({
-        "구역": ["무대 정면", "푸드 존", "체험 부스", "휴게실", "화장실"],
-        "평균 체류 시간(분)": [45, 25, 18, 30, 5],
-        "혼잡 위험도(%)": [85, 62, 40, 20, 35]
-    })
-    fig = px.bar(df_sim, x="구역", y="혼잡 위험도(%)", color="혼잡 위험도(%)", color_continuous_scale="Reds", title="구역별 피크 타임 혼잡 위험도")
-    st.plotly_chart(fig, use_container_width=True)
+    st.br = st.markdown("<br>", unsafe_allow_html=True)
+    r_col1, r_col2 = st.columns(2)
+    with r_col1:
+        st.download_button("📄 PDF 정식 보고서 다운로드", data=f"AI Event Layout Report for {st.session_state['event_name']}", file_name="event_layout_report.pdf", type="primary", use_container_width=True)
+    with r_col2:
+        if st.button("🏠 홈으로 돌아가기", use_container_width=True):
+            st.session_state['current_page'] = 'home'
+            st.rerun()
 
-elif st.session_state['current_nav'] == "AI 보고서":
-    st.markdown("### 📋 AI 공간 최적화 종합 보고서")
-    st.caption("상사 및 관계 부서 제출용 자동 생성 보고서입니다.")
-    st.download_button("📄 PDF 보고서 다운로드 (가상)", data="Report content", file_name="event_layout_report.pdf")
+elif st.session_state['current_page'] == 'settings':
+    st.markdown("### ⚙️ 시스템 및 로그인 정보 설정")
 
-elif st.session_state['current_nav'] == "설정":
-    st.markdown("### ⚙️ 시스템 및 시뮬레이션 설정")
-    st.slider("시뮬레이션 인파 파티클 속도", 1.0, 5.0, 2.5)
+    st.markdown("""
+    <div class="custom-card">
+        <h4>👤 계정 및 사용자 프로필</h4>
+    </div>
+    """, unsafe_allow_html=True)
+
+    set_col1, set_col2 = st.columns(2)
+    with set_col1:
+        st.session_state['user_name'] = st.text_input("사용자 이름/직급", value=st.session_state['user_name'])
+        st.text_input("소속 기관/부서", value="충청남도 행사기획과")
+    with set_col2:
+        st.text_input("이메일 주소", value="planner@chungnam.go.kr")
+        st.selectbox("권한 등급", ["기획관 (최고 관리자)", "실무 담당자", "게스트"])
+
+    st.divider()
+
+    st.markdown("#### 🎮 시뮬레이션 파라미터")
+    st.slider("인파 흐름 시뮬레이션 파티클 속도", 1.0, 5.0, 2.5)
+    st.toggle("고해상도 3D Isometric 랜더링 사용", value=True)
+
+    st.divider()
+
+    if st.session_state['logged_in']:
+        if st.button("🚪 로그아웃", type="secondary"):
+            st.session_state['logged_in'] = False
+            st.toast("로그아웃 되었습니다.")
+            st.session_state['current_page'] = 'home'
+            st.rerun()
+    else:
+        if st.button("🔑 로그인 페이지로 이동", type="primary"):
+            st.session_state['current_page'] = 'login'
+            st.rerun()
+
+elif st.session_state['current_page'] == 'login':
+    st.markdown("### 🔑 이벤트 아키텍트 AI 로그인 / 회원가입")
+
+    login_card = st.container()
+    with login_card:
+        l_col1, l_col2, l_col3 = st.columns([2, 3, 2])
+        with l_col2:
+            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            st.text_input("아이디 (이메일)", value="planner@chungnam.go.kr")
+            st.text_input("비밀번호", type="password", value="••••••••")
+            
+            if st.button("로그인 실행", type="primary", use_container_width=True):
+                st.session_state['logged_in'] = True
+                st.toast("성공적으로 로그인되었습니다!", icon="✅")
+                st.session_state['current_page'] = 'dashboard'
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
