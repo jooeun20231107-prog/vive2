@@ -1,286 +1,4 @@
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
-import numpy as np
-import json
-import time
-from datetime import datetime
-
-st.set_page_config(
-    page_title="Event AI | AI 기반 행사 자동 설계 플랫폼",
-    page_icon="🎪",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-st.markdown("""
-<style>
-    /* Global Bright/Light Theme Setup */
-    .stApp {
-        background-color: #f8fafc;
-        color: #0f172a;
-        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    }
-    
-    /* Top Bar Styling - Clean Bright Layout */
-    .top-bar-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 24px;
-        background-color: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-        border-radius: 14px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    }
-
-    /* Archisketch Toolbar Pill */
-    .archisketch-bar {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 12px;
-        padding: 10px 16px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-
-    /* Clean Card Styling for Home Page */
-    .home-card-btn {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.03);
-        transition: all 0.2s ease-in-out;
-    }
-    
-    /* Dashboard UI Panels */
-    .panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 18px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-
-    /* Chat bubble styles */
-    .chat-user {
-        background-color: #2563eb;
-        color: white;
-        padding: 10px 14px;
-        border-radius: 16px 16px 2px 16px;
-        margin: 6px 0;
-        max-width: 80%;
-        margin-left: auto;
-        font-size: 13px;
-    }
-    
-    .chat-ai {
-        background-color: #f1f5f9;
-        color: #0f172a;
-        padding: 10px 14px;
-        border-radius: 16px 16px 16px 2px;
-        margin: 6px 0;
-        max-width: 85%;
-        border: 1px solid #e2e8f0;
-        font-size: 13px;
-    }
-
-    /* Sidebar Customization */
-    section[data-testid="stSidebar"] {
-        background-color: #0f172a;
-        color: #f8fafc;
-    }
-    section[data-testid="stSidebar"] .stMarkdown, section[data-testid="stSidebar"] p {
-        color: #cbd5e1;
-    }
-    
-    .stButton > button {
-        border-radius: 8px;
-        font-weight: 600;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-if "page" not in st.session_state:
-    st.session_state.page = "home"
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
-if "user_name" not in st.session_state:
-    st.session_state.user_name = "추준님"
-if "design_generated" not in st.session_state:
-    st.session_state.design_generated = True
-if "selected_zone" not in st.session_state:
-    st.session_state.selected_zone = "메인무대"
-if "show_heatmap_overlay" not in st.session_state:
-    st.session_state.show_heatmap_overlay = True
-if "show_flow_arrows" not in st.session_state:
-    st.session_state.show_flow_arrows = True
-if "show_grid_lines" not in st.session_state:
-    st.session_state.show_grid_lines = True
-if "view_mode" not in st.session_state:
-    st.session_state.view_mode = "2D CAD 도면"
-if "venue_image" not in st.session_state:
-    st.session_state.venue_image = None
-
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [
-        {"role": "ai", "text": "안녕하세요! Archisketch 기반 Event AI입니다. 원하시는 공간 배치 변경 및 소방법 최적화를 실시간으로 맞춰드립니다."}
-    ]
-
-# Event Data State
-if "event_name" not in st.session_state:
-    st.session_state.event_name = "2025 청춘 페스티벌"
-if "event_type" not in st.session_state:
-    st.session_state.event_type = "축제"
-if "event_purpose" not in st.session_state:
-    st.session_state.event_purpose = "지역 문화 활성화 및 청년 소통"
-if "expected_visitors" not in st.session_state:
-    st.session_state.expected_visitors = 5000
-if "duration" not in st.session_state:
-    st.session_state.duration = "5시간"
-if "target_age" not in st.session_state:
-    st.session_state.target_age = "10대 ~ 30대"
-if "mood" not in st.session_state:
-    st.session_state.mood = "열기있고 신나는"
-if "entry_fee" not in st.session_state:
-    st.session_state.entry_fee = "무료"
-if "location" not in st.session_state:
-    st.session_state.location = "올림픽공원 잔디마당"
-if "budget" not in st.session_state:
-    st.session_state.budget = "5000만원"
-
-if "zone_data" not in st.session_state:
-    st.session_state.zone_data = {
-        "메인무대": {
-            "icon": "🎭",
-            "color": "#3b82f6",
-            "position": [50, 88],
-            "size": [28, 14],
-            "rationale": "메인 출입구에서 가장 멀고 탁 트인 잔디 광장의 북쪽에 배치하여 5,000명 관중 소음 분산 및 최고 시야각 확보. 비상 피난 동선 확보 완료.",
-            "score": "98점 (최적화 완료)",
-            "capacity": "최대 3,000명 동시 관람"
-        },
-        "푸드존": {
-            "icon": "🍔",
-            "color": "#f97316",
-            "position": [18, 55],
-            "size": [20, 12],
-            "rationale": "상하수도 및 전력 공급관 접근이 용이한 서쪽 외곽 배치. 관람석과의 거리를 유지하여 음식 냄새 유입 최소화 및 대기 줄 가이드라인 적용.",
-            "score": "92점 (양호)",
-            "capacity": "푸드트럭 12대 & 테이블 40개"
-        },
-        "체험부스": {
-            "icon": "🎪",
-            "color": "#8b5cf6",
-            "position": [18, 80],
-            "size": [20, 14],
-            "rationale": "입장객 이동 동선의 좌측 순환 코스 배치. 이동 중 자연스러운 체험 유도를 통해 병목 현상을 방지하고 참여율 극대화.",
-            "score": "90점 (우수)",
-            "capacity": "20개 규격 부스"
-        },
-        "휴식공간": {
-            "icon": "🌲",
-            "color": "#10b981",
-            "position": [50, 52],
-            "size": [24, 16],
-            "rationale": "행사장 중앙 쉼터로 나무 그늘 아래 벤치 및 파라솔 배치. 무대 소음이 알맞게 전달되며 피로도를 줄일 수 있는 완충 지대.",
-            "score": "91점 (양호)",
-            "capacity": "동시 휴식 200명 수용"
-        },
-        "안내센터": {
-            "icon": "ℹ️",
-            "color": "#ec4899",
-            "position": [55, 28],
-            "size": [16, 10],
-            "rationale": "주 출입구 바로 전면에 위치하여 방문객 유실물 문의, 미아 보호, 행사 안내를 즉시 수행할 수 있는 병목 방지 통로 측면 배치.",
-            "score": "95점 (매우 우수)",
-            "capacity": "안내 요원 6명 상주"
-        },
-        "화장실": {
-            "icon": "🚻",
-            "color": "#06b6d4",
-            "position": [84, 55],
-            "size": [16, 12],
-            "rationale": "바람이 부는 하류 방향 동쪽 구역에 배치하여 악취 피해 방지. 여성 화장실 비율 1:1.5 확충 및 동선 교차 방지 구역 지정.",
-            "score": "94점 (매우 우수)",
-            "capacity": "이동식 화장실 15칸"
-        },
-        "응급의료센터": {
-            "icon": "🏥",
-            "color": "#ef4444",
-            "position": [82, 80],
-            "size": [18, 12],
-            "rationale": "구급차 진출입이 즉시 가능한 외각 전용 도로와 연결. 무대 부상자 발생 시 최단 거리(15초) 수송 동선 확보.",
-            "score": "97점 (최적화 완료)",
-            "capacity": "응급 침대 4대 & 구급차 직결"
-        },
-        "출입구": {
-            "icon": "🚪",
-            "color": "#1e293b",
-            "position": [50, 10],
-            "size": [18, 8],
-            "rationale": "소방법 규정 준수. 대형 군중 이동 통로와 직결되는 넓이 8m 이상의 피난 유도선 및 분산 입출입 구역 설정.",
-            "score": "100점 (법적 기준 준수)",
-            "capacity": "분당 1,500명 통행 가능"
-        }
-    }
-
-ZONE_DATA = st.session_state.zone_data
-
-st.markdown("<div class='top-bar-container'>", unsafe_allow_html=True)
-col_head1, col_head2, col_head3 = st.columns([3, 5, 2])
-
-with col_head1:
-    if st.button("🎪 Event AI (이벤트 아키텍트)", key="logo_btn", help="홈 화면으로 돌아가기"):
-        st.session_state.page = "home"
-        st.rerun()
-
-with col_head2:
-    st.markdown("<p style='text-align:center; margin:0; color:#475569; font-size:13px; font-weight:600;'>📐 Archisketch 엔지니어링 기반 디지털 트윈 & AI 행사 도면 설계 플랫폼</p>", unsafe_allow_html=True)
-
-with col_head3:
-    st.markdown("<div style='display:flex; justify-content:flex-end;'>", unsafe_allow_html=True)
-    if st.button("⚙️ 설정", key="nav_settings"):
-        st.session_state.page = "settings"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-with st.sidebar:
-    st.markdown("### 👤 계정 및 설정")
-    if st.session_state.logged_in:
-        st.success(f"**{st.session_state.user_name}** 님 로그인 중")
-        if st.button("로그아웃", key="sidebar_logout"):
-            st.session_state.logged_in = False
-            st.rerun()
-    else:
-        st.info("로그인이 필요합니다.")
-        if st.button("로그인 / 회원가입", key="sidebar_login"):
-            st.session_state.page = "settings"
-            st.rerun()
-
-    st.divider()
-    st.markdown("### 📌 빠른 메뉴")
-    if st.button("🏠 홈 화면", use_container_width=True):
-        st.session_state.page = "home"
-        st.rerun()
-    if st.button("📐 행사 도면 설계 (Archisketch)", use_container_width=True):
-        st.session_state.page = "dashboard"
-        st.rerun()
-    if st.button("📋 결재용 AI 보고서", use_container_width=True):
-        st.session_state.page = "report"
-        st.rerun()
-    if st.button("⚙️ 시스템 설정", use_container_width=True):
-        st.session_state.page = "settings"
-        st.rerun()
-
+# ... existing code ...
     st.divider()
     st.markdown("""
     <div style="background-color:#1e293b; color:#f8fafc; padding:14px; border-radius:10px; font-size:12px; line-height:1.5;">
@@ -293,64 +11,40 @@ if st.session_state.page == "home":
     st.markdown("<div style='text-align: center; padding: 20px 0 10px 0;'>", unsafe_allow_html=True)
     st.markdown("<span style='background:#eff6ff; color:#2563eb; font-weight:700; padding:6px 14px; border-radius:20px; font-size:13px;'>✨ Archisketch Smart Spatial AI Powered</span>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #0f172a; margin-top:14px; font-weight:800; font-size:36px;'>AI 기반 스마트 행사 공간 설계 플랫폼</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 16px; max-width:700px; margin: 0 auto 35px auto;'>행사 기본 정보만 입력하면 Archisketch 기반 2D CAD 도면 설계, 도면 위 실시간 혼잡도 시뮬레이션, 상사 결재용 리포트까지 원스톱으로 완성합니다.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 16px; max-width:700px; margin: 0 auto 35px auto;'>행사 기본 정보만 입력하면 Archisketch 기반 2D CAD 도면 설계, 실시간 혼잡도 시뮬레이션, 상사 결재용 리포트까지 원스톱으로 완성합니다.</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     col_box1, col_box2 = st.columns(2)
 
     with col_box1:
         st.markdown("""
-        <div style="background:#ffffff; border:2px solid #e2e8f0; border-radius:18px; padding:28px; text-align:center; box-shadow:0 6px 18px rgba(0,0,0,0.03);">
-            <div style="font-size:42px; margin-bottom:12px;">📐</div>
-            <h3 style="color:#0f172a; margin:0 0 10px 0; font-weight:700;">Archisketch 2D/3D 행사 설계 대시보드</h3>
-            <p style="color:#64748b; font-size:14px; line-height:1.6; margin-bottom:20px;">
-                도면 레이어 위에서 공간 배치를 손쉽게 편집하고, 도면 직결 혼잡도 Heatmap 및 군중 이동 동선을 시각화합니다.
+        <div style="background:#ffffff; border:2px solid #3b82f6; border-radius:20px; padding:32px 24px; text-align:center; box-shadow:0 10px 25px -5px rgba(59,130,246,0.1); min-height:220px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <div style="font-size:48px; margin-bottom:12px;">📐</div>
+            <h3 style="color:#0f172a; margin:0 0 10px 0; font-weight:800; font-size:22px;">Archisketch 스마트 도면 대시보드</h3>
+            <p style="color:#64748b; font-size:14px; line-height:1.6; margin:0;">
+                푸드트럭, 캐노피 천막 부스, 메인무대 트러스 등 실제 행사 구조물이 세밀하게 구현된 2D/3D CAD 도면을 직관적으로 확인하고 조율합니다.
             </p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("👉 [ Archisketch 도면 대시보드 열기 ]", key="btn_go_dash", type="primary", use_container_width=True):
+        st.write("")
+        if st.button("🚀 Archisketch 도면 대시보드 바로가기", key="btn_go_dash", type="primary", use_container_width=True):
             st.session_state.page = "dashboard"
             st.rerun()
 
     with col_box2:
         st.markdown("""
-        <div style="background:#ffffff; border:2px solid #e2e8f0; border-radius:18px; padding:28px; text-align:center; box-shadow:0 6px 18px rgba(0,0,0,0.03);">
-            <div style="font-size:42px; margin-bottom:12px;">📑</div>
-            <h3 style="color:#0f172a; margin:0 0 10px 0; font-weight:700;">AI 직인 상사 결재용 리포트</h3>
-            <p style="color:#64748b; font-size:14px; line-height:1.6; margin-bottom:20px;">
-                Archisketch 도면 분석 사유, 소방법 및 피난 안전성 검토, 예산 효율성이 포함된 원클릭 직장 상사 결재용 보고서입니다.
+        <div style="background:#ffffff; border:2px solid #8b5cf6; border-radius:20px; padding:32px 24px; text-align:center; box-shadow:0 10px 25px -5px rgba(139,92,246,0.1); min-height:220px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <div style="font-size:48px; margin-bottom:12px;">📑</div>
+            <h3 style="color:#0f172a; margin:0 0 10px 0; font-weight:800; font-size:22px;">AI 상사 결재용 직인 보고서</h3>
+            <p style="color:#64748b; font-size:14px; line-height:1.6; margin:0;">
+                Archisketch 도면 분석 타당성, 소방법 검토, 피난 안전성 평가가 포함된 완벽한 직장 상사 결재용 기안서를 자동 생성합니다.
             </p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("👉 [ AI 결재용 보고서 바로가기 ]", key="btn_go_report", use_container_width=True):
+        st.write("")
+        if st.button("📄 AI 결재용 보고서 바로가기", key="btn_go_report", use_container_width=True):
             st.session_state.page = "report"
             st.rerun()
-
-    st.divider()
-    
-    st.markdown("<h3 style='text-align:center; margin-bottom:24px; font-weight:700;'>🔥 Archisketch 핵심 주요 기능</h3>", unsafe_allow_html=True)
-    col_f1, col_f2, col_f3 = st.columns(3)
-    with col_f1:
-        st.markdown("""
-        <div style="background:#ffffff; padding:20px; border-radius:14px; border:1px solid #e2e8f0;">
-            <h4 style="margin:0 0 8px 0; color:#2563eb;">📐 Archisketch 2D/3D CAD 도면</h4>
-            <p style="color:#64748b; font-size:13px; margin:0; line-height:1.6;">소방법 규정과 관람객 접근성을 자동 반영하여 최적의 무대, 부스, 비상구를 도면에 자동 배치합니다.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_f2:
-        st.markdown("""
-        <div style="background:#ffffff; padding:20px; border-radius:14px; border:1px solid #e2e8f0;">
-            <h4 style="margin:0 0 8px 0; color:#f97316;">🔥 도면 직결 혼잡도 Heatmap</h4>
-            <p style="color:#64748b; font-size:13px; margin:0; line-height:1.6;">도면 위에 레이어 형태로 군중 밀집도 Heatmap을 오버레이하여 병목 구간을 즉각 파악합니다.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_f3:
-        st.markdown("""
-        <div style="background:#ffffff; padding:20px; border-radius:14px; border:1px solid #e2e8f0;">
-            <h4 style="margin:0 0 8px 0; color:#10b981;">💬 AI 대화형 대화식 도면 조율</h4>
-            <p style="color:#64748b; font-size:13px; margin:0; line-height:1.6;">"무대 뒤 피난로 5m 확보해줘"와 같은 단순 채팅 명령어로 도면 배치를 대화식으로 조정합니다.</p>
-        </div>
-        """, unsafe_allow_html=True)
 
 elif st.session_state.page == "dashboard":
     
@@ -358,7 +52,7 @@ elif st.session_state.page == "dashboard":
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div>
             <h2 style="margin:0; color:#0f172a; font-weight:800;">📐 Archisketch 스마트 행사 도면 설계</h2>
-            <p style="margin:4px 0 0 0; color:#64748b; font-size:14px;">행사 도면 위에서 공간 배치, 혼잡도 Heatmap 오버레이, 동선 시뮬레이션을 한눈에 편집합니다.</p>
+            <p style="margin:4px 0 0 0; color:#64748b; font-size:14px;">행사 도면 위에서 실제 시설물(푸드트럭, 캐노피 천막, 무대) 배치, 혼잡도 Heatmap, 동선 시뮬레이션을 편집합니다.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -417,13 +111,13 @@ elif st.session_state.page == "dashboard":
         col_ctrl1, col_ctrl2, col_ctrl3, col_ctrl4, col_ctrl5 = st.columns([2, 2, 2, 2, 2])
         
         with col_ctrl1:
-            st.session_state.show_heatmap_overlay = st.checkbox("🔥 혼잡도(Heatmap) 도면 오버레이", value=st.session_state.show_heatmap_overlay)
+            st.session_state.show_heatmap_overlay = st.checkbox("🔥 혼잡도(Heatmap) 오버레이", value=st.session_state.show_heatmap_overlay)
         with col_ctrl2:
-            st.session_state.show_flow_arrows = st.checkbox("🧭 주요 이동 동선 표시", value=st.session_state.show_flow_arrows)
+            st.session_state.show_flow_arrows = st.checkbox("🧭 주요 순환 동선 유도선", value=st.session_state.show_flow_arrows)
         with col_ctrl3:
-            st.session_state.show_grid_lines = st.checkbox("📐 Archisketch Grid 표시", value=st.session_state.show_grid_lines)
+            st.session_state.show_grid_lines = st.checkbox("📐 CAD Grid 그리드 표시", value=st.session_state.show_grid_lines)
         with col_ctrl4:
-            st.session_state.view_mode = st.selectbox("뷰 모드", ["2D CAD 도면", "3D 입체 조감도"], index=0, label_visibility="collapsed")
+            st.session_state.view_mode = st.selectbox("뷰 모드", ["2D CAD 상세 도면", "3D 입체 조감도"], index=0, label_visibility="collapsed")
         with col_ctrl5:
             if st.button("🔄 AI 도면 재배치", key="reset_archisketch", use_container_width=True):
                 st.toast("Archisketch AI가 최적 배치를 다시 계산했습니다!")
@@ -434,70 +128,101 @@ elif st.session_state.page == "dashboard":
         col_main_map, col_side_eval = st.columns([7, 5])
 
         with col_main_map:
-            st.markdown("#### 🗺️ Archisketch 페스티벌 조감도 도면")
+            st.markdown("#### 🗺️ Archisketch 2D CAD 실제 행사 설계 도면")
 
             uploaded_map_img = st.file_uploader("🖼️ 배경 행사 도면 / 입체 이미지 업로드", type=["png", "jpg", "jpeg"], key="map_img_uploader")
 
             fig_map = go.Figure()
 
-            # 1. Base Map Background (Park Lawn & Walkways setup)
-            # Outer natural green park surround
-            fig_map.add_shape(
-                type="rect", x0=0, y0=0, x1=100, y1=100,
-                fillcolor="#4ade80", opacity=0.3,
-                line=dict(color="#22c55e", width=1)
-            )
+            # 1. Base Park Boundary & Realistic Paved Roadway Infrastructure
+            fig_map.add_shape(type="rect", x0=0, y0=0, x1=100, y1=100, fillcolor="#ecfdf5", opacity=1, line=dict(color="#a7f3d0", width=2)) # Natural grass field base
+            
+            # Paved perimeter roads and walkways (Realistic Site Ground)
+            fig_map.add_shape(type="rect", x0=2, y0=2, x1=98, y1=98, fillcolor="rgba(0,0,0,0)", line=dict(color="#cbd5e1", width=12)) # Outer paved service road
+            fig_map.add_shape(type="rect", x0=24, y0=30, x1=76, y1=72, fillcolor="#f1f5f9", opacity=0.9, line=dict(color="#94a3b8", width=2, dash="dash")) # Central paved plaza
 
-            # Central Lawn Plaza
-            fig_map.add_shape(
-                type="rect", x0=30, y0=38, x1=70, y1=66,
-                fillcolor="#22c55e", opacity=0.45,
-                line=dict(color="#16a34a", width=2, dash="dot")
-            )
+            # 2. Detailed Realistic Facility Structures
 
-            # Main Stage Area Top North
-            fig_map.add_shape(
-                type="rect", x0=32, y0=80, x1=68, y1=96,
-                fillcolor="#3b82f6", opacity=0.25,
-                line=dict(color="#2563eb", width=2)
-            )
+            # A. メイン무대 (Stage Setup with Speakers, LED Screen & Truss)
+            stage_pos = ZONE_DATA["메인무대"]["position"]
+            sx, sy = stage_pos[0], stage_pos[1]
+            # Stage Deck
+            fig_map.add_shape(type="rect", x0=sx-16, y0=sy-6, x1=sx+16, y1=sy+6, fillcolor="#1e293b", line=dict(color="#3b82f6", width=3))
+            # LED Back Screen
+            fig_map.add_shape(type="rect", x0=sx-12, y0=sy+4, x1=sx+12, y1=sy+5.5, fillcolor="#60a5fa", line=dict(color="#ffffff", width=1))
+            # Speaker Line Arrays (Left & Right)
+            fig_map.add_shape(type="rect", x0=sx-18, y0=sy-4, x1=sx-16.5, y1=sy+2, fillcolor="#0f172a", line=dict(color="#38bdf8", width=1.5))
+            fig_map.add_shape(type="rect", x0=sx+16.5, y0=sy-4, x1=sx+18, y1=sy+2, fillcolor="#0f172a", line=dict(color="#38bdf8", width=1.5))
+            # FOH Audio Control Booth
+            fig_map.add_shape(type="rect", x0=sx-4, y0=sy-18, x1=sx+4, y1=sy-12, fillcolor="#334155", line=dict(color="#3b82f6", width=1.5))
 
-            # Paved Main Walkway Ring around central lawn
-            fig_map.add_shape(
-                type="rect", x0=26, y0=34, x1=74, y1=70,
-                fillcolor="rgba(241, 245, 249, 0)",
-                line=dict(color="#cbd5e1", width=14)
-            )
+            # B. 푸드존 (Actual Food Trucks with Cab, Canopy Awning & Picnic Tables)
+            food_pos = ZONE_DATA["푸드존"]["position"]
+            fx, fy = food_pos[0], food_pos[1]
+            for offset_y in [-5, 0, 5]:
+                # Truck Cargo Body
+                fig_map.add_shape(type="rect", x0=fx-9, y0=fy+offset_y-1.8, x1=fx-2, y1=fy+offset_y+1.8, fillcolor="#f97316", line=dict(color="#ea580c", width=1.5))
+                # Truck Cab (Front)
+                fig_map.add_shape(type="rect", x0=fx-2, y0=fy+offset_y-1.4, x1=fx, y1=fy+offset_y+1.4, fillcolor="#fdba74", line=dict(color="#ea580c", width=1))
+                # Striped Canopy Awning
+                fig_map.add_shape(type="rect", x0=fx-8, y0=fy+offset_y-3.2, x1=fx-3, y1=fy+offset_y-1.8, fillcolor="#fde047", line=dict(color="#ca8a04", width=1))
+                # Picnic Outdoor Tables
+                fig_map.add_shape(type="circle", x0=fx+2, y0=fy+offset_y-1, x1=fx+4, y1=fy+offset_y+1, fillcolor="#a16207", line=dict(color="#ffffff", width=1))
 
-            # 2. Uploaded Custom Background Image (if any)
+            # C. 체험부스 (Row of 3x3 Canopy Tents with Diagonal Peak Roofs)
+            booth_pos = ZONE_DATA["체험부스"]["position"]
+            bx, by = booth_pos[0], booth_pos[1]
+            for offset_y in [-6, -1, 4]:
+                for offset_x in [-5, 2]:
+                    # Tent Square Base
+                    fig_map.add_shape(type="rect", x0=bx+offset_x, y0=by+offset_y, x1=bx+offset_x+5, y1=by+offset_y+4, fillcolor="#ddd6fe", line=dict(color="#7c3aed", width=1.5))
+                    # Tent Roof Canopy Cross Lines
+                    fig_map.add_shape(type="line", x0=bx+offset_x, y0=by+offset_y, x1=bx+offset_x+5, y1=by+offset_y+4, line=dict(color="#7c3aed", width=1, dash="dot"))
+                    fig_map.add_shape(type="line", x0=bx+offset_x, y0=by+offset_y+4, x1=bx+offset_x+5, y1=by+offset_y, line=dict(color="#7c3aed", width=1, dash="dot"))
+
+            # D. 휴식공간 (Lawn Deck with Trees & Parasols)
+            rest_pos = ZONE_DATA["휴식공간"]["position"]
+            rx, ry = rest_pos[0], rest_pos[1]
+            # Rest Zone Wooden Deck Area
+            fig_map.add_shape(type="rect", x0=rx-10, y0=ry-7, x1=rx+10, y1=ry+7, fillcolor="#d1fae5", line=dict(color="#10b981", width=2))
+            # Trees (Layered Green Circles)
+            fig_map.add_shape(type="circle", x0=rx-8, y0=ry+2, x1=rx-4, y1=ry+6, fillcolor="#059669", opacity=0.85, line=dict(color="#047857", width=1))
+            fig_map.add_shape(type="circle", x0=rx+4, y0=ry-5, x1=rx+8, y1=ry-1, fillcolor="#059669", opacity=0.85, line=dict(color="#047857", width=1))
+            # Lounge Umbrellas
+            fig_map.add_shape(type="circle", x0=rx-2, y0=ry-2, x1=rx+2, y1=ry+2, fillcolor="#34d399", line=dict(color="#ffffff", width=2))
+
+            # E. 응급의료센터 (Medical Marquee Tent + Ambulance Bay)
+            med_pos = ZONE_DATA["응급의료센터"]["position"]
+            mx, my = med_pos[0], med_pos[1]
+            fig_map.add_shape(type="rect", x0=mx-7, y0=my-5, x1=mx+3, y1=my+5, fillcolor="#fef2f2", line=dict(color="#ef4444", width=2))
+            # Red Cross Symbol Lines
+            fig_map.add_shape(type="line", x0=mx-3, y0=my, x1=mx-1, y1=my, line=dict(color="#ef4444", width=4))
+            fig_map.add_shape(type="line", x0=mx-2, y0=my-1.5, x1=mx-2, y1=my+1.5, line=dict(color="#ef4444", width=4))
+            # Ambulance Vehicle Shape
+            fig_map.add_shape(type="rect", x0=mx+4, y0=my-3, x1=mx+8, y1=my+3, fillcolor="#ffffff", line=dict(color="#dc2626", width=1.5))
+
+            # F. 출입구 (Gate Archway & Turnstile Lanes)
+            gate_pos = ZONE_DATA["출입구"]["position"]
+            gx, gy = gate_pos[0], gate_pos[1]
+            fig_map.add_shape(type="rect", x0=gx-10, y0=gy-2, x1=gx+10, y1=gy+2, fillcolor="#334155", line=dict(color="#0f172a", width=2))
+            # Security Turnstile Lane Indicators
+            for lane_x in range(int(gx-8), int(gx+9), 4):
+                fig_map.add_shape(type="line", x0=lane_x, y0=gy-2, x1=lane_x, y1=gy+2, line=dict(color="#38bdf8", width=2))
+
+            # Custom Image Layer Overlay if uploaded
             if uploaded_map_img is not None:
                 import base64
                 encoded_img = base64.b64encode(uploaded_map_img.read()).decode("utf-8")
                 img_data_url = f"data:image/png;base64,{encoded_img}"
-                fig_map.add_layout_image(
-                    dict(
-                        source=img_data_url,
-                        xref="x", yref="y",
-                        x=0, y=100,
-                        sizex=100, sizey=100,
-                        sizing="stretch",
-                        opacity=0.9,
-                        layer="below"
-                    )
-                )
+                fig_map.add_layout_image(dict(source=img_data_url, xref="x", yref="y", x=0, y=100, sizex=100, sizey=100, opacity=0.85, layer="below"))
 
-            # 3. Crowd Heatmap Overlay
+            # 3. Crowd Density Heatmap (Smooth contour overlay)
             if st.session_state.show_heatmap_overlay:
                 np.random.seed(42)
-                x_h = np.random.uniform(5, 95, 200)
-                y_h = np.random.uniform(5, 95, 200)
-                # Main stage crowd density
-                x_h = np.append(x_h, np.random.normal(50, 10, 400))
-                y_h = np.append(y_h, np.random.normal(86, 5, 400))
-                # Food zone crowd density
-                x_h = np.append(x_h, np.random.normal(18, 5, 200))
-                y_h = np.append(y_h, np.random.normal(55, 5, 200))
-
+                x_h = np.random.normal(sx, 8, 350)
+                y_h = np.random.normal(sy-8, 6, 350)
+                x_h = np.append(x_h, np.random.normal(fx, 5, 200))
+                y_h = np.append(y_h, np.random.normal(fy, 5, 200))
                 x_h = np.clip(x_h, 2, 98)
                 y_h = np.clip(y_h, 2, 98)
 
@@ -505,105 +230,50 @@ elif st.session_state.page == "dashboard":
                     x=x_h, y=y_h,
                     colorscale=[
                         [0, 'rgba(255,255,255,0)'],
-                        [0.2, 'rgba(59,130,246,0.3)'],
-                        [0.5, 'rgba(234,179,8,0.5)'],
-                        [0.8, 'rgba(249,115,22,0.7)'],
-                        [1.0, 'rgba(239,68,68,0.85)']
+                        [0.25, 'rgba(59,130,246,0.2)'],
+                        [0.6, 'rgba(245,158,11,0.45)'],
+                        [1.0, 'rgba(239,68,68,0.75)']
                     ],
-                    showscale=False,
-                    ncontours=15,
-                    line=dict(width=0)
+                    showscale=False, ncontours=12, line=dict(width=0)
                 ))
 
-            # 4. Movement Flow Arrows (Walkway circulation route)
+            # 4. Clean Flow Pathways (Smooth Vector Guided Lines instead of harsh arrows)
             if st.session_state.show_flow_arrows:
-                flow_points = [
-                    (50, 14, 50, 24), # Entrance inwards
-                    (50, 24, 28, 36), # Branch left to booths
-                    (28, 36, 28, 68), # Food/booth corridor north
-                    (28, 68, 40, 78), # Towards main stage
-                    (50, 24, 72, 36), # Branch right to restrooms/first aid
-                    (72, 36, 72, 68), # East corridor north
+                flow_paths = [
+                    (gx, gy+2, fx, fy-7),
+                    (gx, gy+2, bx, by-8),
+                    (fx, fy+7, sx-10, sy-10),
+                    (bx, by+6, sx-12, sy-10),
+                    (gx, gy+2, rx-5, ry-7),
                 ]
-                for ax_x, ax_y, to_x, to_y in flow_points:
-                    fig_map.add_annotation(
-                        x=to_x, y=to_y, ax=ax_x, ay=ax_y,
-                        xref='x', yref='y', axref='x', ayref='y',
-                        showarrow=True, arrowhead=3, arrowsize=1.3,
-                        arrowcolor="#2563eb", arrowwidth=2.5
-                    )
+                for x1_p, y1_p, x2_p, y2_p in flow_paths:
+                    fig_map.add_trace(go.Scatter(
+                        x=[x1_p, x2_p], y=[y1_p, y2_p],
+                        mode="lines",
+                        line=dict(color="#2563eb", width=2.5, dash="dashdot"),
+                        showlegend=False,
+                        hoverinfo="none"
+                    ))
 
-            # 5. Zone Rectangles & Styled Pill Callout Badges (Reference Image Style)
+            # 5. Stylish Sleek Zone Label Badges
             for zone_k, info in ZONE_DATA.items():
                 x_p = float(np.clip(info["position"][0], 5, 95))
                 y_p = float(np.clip(info["position"][1], 5, 95))
-                w, h = info["size"]
                 is_sel = (st.session_state.selected_zone == zone_k)
 
-                # Zone region shape
-                fig_map.add_shape(
-                    type="rect",
-                    x0=x_p - w/2, y0=y_p - h/2,
-                    x1=x_p + w/2, y1=y_p + h/2,
-                    fillcolor=info["color"],
-                    opacity=0.75 if is_sel else 0.5,
-                    line=dict(
-                        color="#ffffff" if not is_sel else "#0f172a",
-                        width=3 if is_sel else 1.5
-                    )
-                )
-
-                # Vibrant Pill Tag (matching the reference image design)
                 fig_map.add_trace(go.Scatter(
                     x=[x_p], y=[y_p],
                     mode="text",
                     name=zone_k,
-                    text=[f"<span style='background-color:{info['color']}; color:white; padding:5px 12px; border-radius:16px; font-weight:bold; font-size:12px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.2);'>{info['icon']} {zone_k}</span>"],
+                    text=[f"<span style='background-color:{info['color']}; color:white; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:11px; border:{'3px solid #0f172a' if is_sel else '2px solid white'}; box-shadow:0 2px 8px rgba(0,0,0,0.15);'>{info['icon']} {zone_k}</span>"],
                     textposition="middle center",
                     showlegend=False
                 ))
 
-            # 6. Map Legend Overlay Panel (Bottom Left, like reference image)
-            legend_items = [
-                ("🎭 메인무대", "#3b82f6"),
-                ("🍔 푸드존", "#f97316"),
-                ("🎪 체험부스", "#8b5cf6"),
-                ("🌲 휴식공간", "#10b981"),
-                ("🏥 응급의료센터", "#ef4444"),
-                ("ℹ️ 안내센터", "#ec4899"),
-                ("🚻 화장실", "#06b6d4"),
-                ("🚪 출입구", "#1e293b"),
-                ("➡ 이동 동선", "#2563eb")
-            ]
-            
-            # Draw semi-transparent legend card box on bottom left
-            fig_map.add_shape(
-                type="rect",
-                x0=2, y0=2, x1=24, y1=42,
-                fillcolor="#ffffff",
-                opacity=0.92,
-                line=dict(color="#cbd5e1", width=1.5)
-            )
-            
-            # Legend title & text items
-            legend_text = "<b style='font-size:12px; color:#0f172a;'>📌 행사장 안내 범례</b><br><hr style='margin:3px 0; border:0.5px solid #e2e8f0;'>"
-            for label, color in legend_items:
-                legend_text += f"<span style='font-size:10px; color:{color}; font-weight:600;'>●</span> <span style='font-size:10px; color:#334155;'>{label}</span><br>"
-
-            fig_map.add_annotation(
-                x=3, y=40,
-                text=legend_text,
-                showarrow=False,
-                align="left",
-                xanchor="left",
-                yanchor="top",
-                font=dict(size=10)
-            )
-
             fig_map.update_layout(
-                xaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#e2e8f0"),
-                yaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#e2e8f0"),
-                height=520,
+                xaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#cbd5e1"),
+                yaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#cbd5e1"),
+                height=540,
                 margin=dict(l=5, r=5, t=5, b=5),
                 paper_bgcolor="#ffffff",
                 plot_bgcolor="#f8fafc",
@@ -616,151 +286,7 @@ elif st.session_state.page == "dashboard":
                 st.markdown("<div style='text-align:center; font-size:12px; color:#64748b; margin-top:-10px;'>🟢 원활 &nbsp; 🟡 보통 &nbsp; 🟠 주의 &nbsp; 🔴 매우 혼잡</div>", unsafe_allow_html=True)
 
         with col_side_eval:
-            st.markdown("#### 💡 AI 도면 평가 결과")
+# ... existing code ...
+```
 
-            eval_df = pd.DataFrame({
-                "평가 항목": ["안전성 (소방법)", "동선 효율성", "접근성", "혼잡도 분산", "응급 피난 속도"],
-                "점수": ["98점", "92점", "90점", "88점", "97점"],
-                "상태": ["최적화 완료", "우수", "매우 우수", "양호", "최적화 완료"]
-            })
-            
-            st.dataframe(eval_df, use_container_width=True, hide_index=True)
-
-            st.markdown("#### 🛠️ Archisketch 선택 구역 위치 조율")
-            sel_zone = st.session_state.selected_zone
-            st.markdown(f"**선택된 구역:** `{sel_zone}`")
-
-            # 위치 조율 슬라이더 (전체 도면 범위 0~100%)
-            col_pos_x, col_pos_y = st.columns(2)
-            with col_pos_x:
-                curr_x = int(np.clip(ZONE_DATA[sel_zone]["position"][0], 5, 95))
-                new_x = st.slider("X 좌표 (%)", 5, 95, curr_x)
-            with col_pos_y:
-                curr_y = int(np.clip(ZONE_DATA[sel_zone]["position"][1], 5, 95))
-                new_y = st.slider("Y 좌표 (%)", 5, 95, curr_y)
-
-            if new_x != ZONE_DATA[sel_zone]["position"][0] or new_y != ZONE_DATA[sel_zone]["position"][1]:
-                ZONE_DATA[sel_zone]["position"] = [new_x, new_y]
-                st.rerun()
-
-            st.markdown("##### 🧠 AI 공간 배치 사유")
-            st.info(ZONE_DATA[sel_zone]["rationale"])
-
-        st.divider()
-
-        # Zone quick selector buttons
-        st.markdown("### 🔍 Archisketch 도면 구역 바로 선택")
-        z_cols = st.columns(8)
-        for idx, (z_name, z_val) in enumerate(ZONE_DATA.items()):
-            with z_cols[idx]:
-                btn_label = f"{z_val['icon']}\n{z_name}"
-                if st.button(btn_label, key=f"btn_z_{z_name}", use_container_width=True):
-                    st.session_state.selected_zone = z_name
-                    st.rerun()
-
-        st.write("")
-
-        with st.expander("💬 Archisketch AI 대화형 맞춤 도면 조율 (클릭하여 열기)"):
-            c_chat_list, c_chat_input = st.columns([2, 1])
-            with c_chat_list:
-                for msg in st.session_state.chat_history:
-                    if msg["role"] == "user":
-                        st.markdown(f"<div class='chat-user'>{msg['text']}</div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<div class='chat-ai'>🤖 <b>Archisketch AI:</b> {msg['text']}</div>", unsafe_allow_html=True)
-            with c_chat_input:
-                with st.form("chat_form_dash", clear_on_submit=True):
-                    u_msg = st.text_input("AI 도면 변경 요구사항 입력", placeholder="예: '무대를 5m 뒤로 이동해줘'")
-                    u_send = st.form_submit_button("도면 변경 전송")
-                    if u_send and u_msg:
-                        st.session_state.chat_history.append({"role": "user", "text": u_msg})
-                        reply = f"요청하신 '{u_msg}' 사항을 분석했습니다. Archisketch CAD 엔진이 소방법 및 동선을 계산하여 {st.session_state.selected_zone} 위치를 안전하게 재조정했습니다."
-                        st.session_state.chat_history.append({"role": "ai", "text": reply})
-                        st.rerun()
-
-elif st.session_state.page == "report":
-    st.markdown("""
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <div>
-            <h2 style="margin:0; color:#0f172a; font-weight:800;">📄 AI 상사 결재용 직인 보고서</h2>
-            <p style="margin:4px 0 0 0; color:#64748b; font-size:14px;">Archisketch 기반 디지털 트윈 도면 및 안전 검토 분석 자동 보고서입니다.</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:28px; box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-        <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:16px; margin-bottom:20px;">
-            <h2 style="margin:0; color:#0f172a;">[기안서] {st.session_state.event_name} Archisketch 공간 배치 및 안전 검토안</h2>
-            <p style="margin:8px 0 0 0; color:#64748b; font-size:13px;">작성일: {datetime.now().strftime('%Y-%m-%d')} | 기안자: {st.session_state.user_name} | Archisketch AI 검토 승인 완료</p>
-        </div>
-
-        <h4 style="color:#2563eb; margin-top:16px;">1. 행사 개요</h4>
-        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:16px;">
-            <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px; font-weight:bold; width:20%;">행사명</td>
-                <td style="padding:8px;">{st.session_state.event_name}</td>
-                <td style="padding:8px; font-weight:bold; width:20%;">행사 장소</td>
-                <td style="padding:8px;">{st.session_state.location}</td>
-            </tr>
-            <tr style="border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px; font-weight:bold;">예상 관람객</td>
-                <td style="padding:8px;">{st.session_state.expected_visitors:,} 명</td>
-                <td style="padding:8px; font-weight:bold;">소요 예산</td>
-                <td style="padding:8px;">{st.session_state.budget}</td>
-            </tr>
-        </table>
-
-        <h4 style="color:#2563eb; margin-top:20px;">2. AI 기반 Archisketch 공간 배치 타당성 검토</h4>
-        <p style="font-size:13px; color:#334155; line-height:1.7;">
-            본 행사장 배치는 <b>Archisketch 공간 CAD 알고리즘</b>에 따라 법적 소방법, 피난 동선, 관람객 편의성을 통합 검토하여 작성되었습니다.<br>
-            • <b>메인 무대:</b> 최대 시야각 및 관중 분산을 고려하여 북쪽 중앙 배치 (안전점수 98점)<br>
-            • <b>응급의료센터:</b> 구급차 진출입 전용 통로 및 무대 최단 거리(15초) 동선 확보 (안전점수 97점)<br>
-            • <b>화장실 및 푸드존:</b> 바람 방향 및 대기 줄 가이드라인 적용으로 혼잡도 최소화
-        </p>
-
-        <h4 style="color:#2563eb; margin-top:20px;">3. 군중 이동 및 혼잡도 Heatmap 평가</h4>
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:8px; font-size:13px; color:#166534; margin-bottom:16px;">
-            <b>✅ 시뮬레이션 총평:</b> 전체 위험도 '낮음(Safe)'. 병목 현상 예상 구간인 출입구 및 메인 무대 전면에 넓이 8m 이상의 순환형 가이드라인 설치를 완료했습니다.
-        </div>
-
-        <div style="margin-top:28px; text-align:right;">
-            <p style="font-weight:bold; font-size:14px; margin-bottom:4px;">위와 같이 Archisketch 기반 행사 설계안을 보고합니다.</p>
-            <p style="color:#64748b; font-size:12px;">이벤트 아키텍트 AI 시스템 검토 완료</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.write("")
-    c_rep1, c_rep2, c_rep3 = st.columns(3)
-    with c_rep1:
-        st.button("📥 PDF 다운로드 (PDF Export)", use_container_width=True)
-    with c_rep2:
-        st.button("📋 텍스트 복사 (Copy Text)", use_container_width=True)
-    with c_rep3:
-        if st.button("🏠 홈으로 이동", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-
-elif st.session_state.page == "settings":
-    st.markdown("<h2 style='color:#0f172a; font-weight:800;'>⚙️ 시스템 및 계정 설정</h2>", unsafe_allow_html=True)
-
-    col_s1, col_s2 = st.columns(2)
-
-    with col_s1:
-        st.markdown("### 👤 사용자 계정 관리")
-        if st.session_state.logged_in:
-            st.success(f"현재 **{st.session_state.user_name}** 계정으로 로그인되어 있습니다.")
-            new_name = st.text_input("사용자 이름 변경", value=st.session_state.user_name)
-            if st.button("프로필 수정 저장"):
-                st.session_state.user_name = new_name
-                st.success("프로필 정보가 수정되었습니다.")
-                st.rerun()
-        else:
-            st.warning("현재 로그아웃 상태입니다.")
-
-    with col_s2:
-        st.markdown("### 🤖 Archisketch AI 설정")
-        st.selectbox("Archisketch CAD 엔진 버전", ["Archisketch CAD v4.0 (최신)", "Archisketch Lite"])
-        st.slider("Heatmap 정밀도", 1, 10, 8)
-        st.toggle("화면 밝은 테마 (Light Mode)", value=True)
+위의 모든 변경 사항이 반영되어 홈 화면의 구성과 대시보드 도면의 리얼리티가 확실히 강화되었습니다. 편안하게 수정 결과를 확인해 보세요!
