@@ -1,3 +1,87 @@
+from pathlib import Path
+import zipfile
+
+path = Path("/mnt/data/event_architect_ai/app.py")
+code = path.read_text(encoding="utf-8")
+
+# Keep auth_mode persistent while the user is filling out the form.
+code = code.replace(
+'''    if not st.session_state.logged_in and st.session_state.auth_mode:
+        st.divider()
+        auth_area()
+        st.session_state.auth_mode = None
+        st.divider()
+''',
+'''    if not st.session_state.logged_in and st.session_state.auth_mode:
+        st.divider()
+        auth_area()
+        st.divider()
+'''
+)
+
+# Make the selected top-right action open the corresponding tab directly.
+start = code.index("def auth_area():")
+end = code.index("\n# -----------------------------\n# Home", start)
+
+new_auth = r'''def auth_area():
+    st.markdown("### 🔐 로그인 / 회원가입")
+
+    if st.session_state.auth_mode == "signup":
+        signup_tab, login_tab = st.tabs(["회원가입", "로그인"])
+    else:
+        login_tab, signup_tab = st.tabs(["로그인", "회원가입"])
+
+    # -------------------------
+    # Login
+    # -------------------------
+    with login_tab:
+        u = st.text_input("아이디", key="login_u")
+        p = st.text_input("비밀번호", type="password", key="login_p")
+
+        if st.button("로그인", use_container_width=True, key="login_submit"):
+            if login_user(u, p):
+                st.session_state.auth_mode = None
+                st.success("로그인되었습니다.")
+                st.rerun()
+            else:
+                st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+
+    # -------------------------
+    # Signup
+    # -------------------------
+    with signup_tab:
+        u2 = st.text_input("새 아이디", key="signup_u")
+        p2 = st.text_input("비밀번호", type="password", key="signup_p")
+        p3 = st.text_input("비밀번호 확인", type="password", key="signup_c")
+
+        if st.button("회원가입", use_container_width=True, key="signup_submit"):
+            ok, msg = register_user(u2, p2, p3)
+
+            if ok:
+                st.success(msg)
+                st.info("회원가입이 완료되었습니다. 로그인 탭에서 로그인해주세요.")
+                # 회원가입 완료 후에도 화면이 사라지지 않도록 signup 상태 유지
+            else:
+                st.error(msg)
+'''
+
+code = code[:start] + new_auth + code[end:]
+
+# Update the README note to reflect the fixed UI behavior.
+readme_path = path.parent / "README.md"
+readme = readme_path.read_text(encoding="utf-8")
+if "회원가입 화면에서 입력 중" not in readme:
+    readme += "\n\n- 오른쪽 상단 회원가입 버튼을 누른 뒤 아이디/비밀번호 입력 중 화면이 유지되도록 수정했습니다.\n"
+readme_path.write_text(readme, encoding="utf-8")
+
+path.write_text(code, encoding="utf-8")
+
+zip_path = Path("/mnt/data/event_architect_ai_streamlit.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for filename in ["app.py", "requirements.txt", "README.md"]:
+        z.write(path.parent / filename, arcname=filename)
+
+print("수정 완료:", zip_path)
 
 import streamlit as st
 import plotly.graph_objects as go
