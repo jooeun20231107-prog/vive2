@@ -61,6 +61,31 @@ st.markdown("""
         justify-content: space-between;
     }
 
+    /* 혼잡도 범례 HUD 카드 */
+    .legend-card {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: #F8FAFC;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    }
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: 16px;
+        font-weight: 600;
+    }
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
     /* 상단 로고 버튼 및 사이드바 간격 */
     div[data-testid="stSidebarHeader"] {
         padding-top: 0.5rem;
@@ -525,11 +550,27 @@ elif st.session_state['page'] == 'dashboard':
         with v_col3:
             st.session_state['show_grid'] = st.checkbox("10m 거리 격자", value=st.session_state['show_grid'])
 
+        if st.session_state['show_crowd_flow']:
+            st.markdown("""
+            <div class="legend-card">
+                <div style="font-weight: bold; margin-bottom: 6px; color: #38BDF8; font-size: 0.9rem;">
+                    🗺️ 관람객 혼잡도 및 동선 시각화 범례 (Crowd Density & Pedestrian HUD)
+                </div>
+                <div>
+                    <span class="legend-item"><span class="legend-dot" style="background-color: #EF4444; box-shadow: 0 0 8px #EF4444;"></span> 🔴 고혼잡/병목 (밀집도 85%+ 메인 무대)</span>
+                    <span class="legend-item"><span class="legend-dot" style="background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B;"></span> 🟡 중혼잡/대기열 (밀집도 50~80% 푸드존)</span>
+                    <span class="legend-item"><span class="legend-dot" style="background-color: #10B981; box-shadow: 0 0 8px #10B981;"></span> 🟢 원활/휴게 구역 (잔디 광장)</span>
+                    <span class="legend-item"><span class="legend-dot" style="background-color: #38BDF8;"></span> 🔵 주요 이동 점진 벡터</span>
+                    <span class="legend-item"><span class="legend-dot" style="background-color: #EF4444; border: 1px stroke #FFF;"></span> 🚨 비상 대피로</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
         col_main_left, col_main_right = st.columns([2.4, 1])
 
         with col_main_left:
             st.markdown("### 🏢 행사 공간 디지털 트윈 (Spatial Twin)")
-            st.caption("💡 **도면 위의 시설 뱃지(푸드존, 무대 등)를 직접 클릭**하시면 오른쪽에서 AI 배치 사유가 조회됩니다!")
+            st.caption("💡 **아래 시설 선택 버튼을 누르거나 오른쪽에서 위치/크기를 조작**하면 도면에 즉시 반영됩니다!")
             
             facs = st.session_state['facilities']
             mode = st.session_state['view_mode']
@@ -537,8 +578,8 @@ elif st.session_state['page'] == 'dashboard':
 
             sorted_keys = sorted(facs.keys(), key=lambda k: facs[k]['y'])
 
-            bg_color = "#1E293B" if mode == '2D_PLAN' else "#2D5A27"
-            grid_stroke = "#334155" if mode == '2D_PLAN' else "#3D7A36"
+            bg_color = "#0F172A" if mode == '2D_PLAN' else "#1E3A1E"
+            grid_stroke = "#1E293B" if mode == '2D_PLAN' else "#2D5A27"
             wall_border_color = "#38BDF8" if mode == '2D_PLAN' else "#22C55E"
 
             svg_items = []
@@ -547,34 +588,33 @@ elif st.session_state['page'] == 'dashboard':
             if st.session_state['show_grid']:
                 grid_lines = []
                 for gx in range(100, 950, 80):
-                    grid_lines.append(f'<line x1="{gx}" y1="80" x2="{gx}" y2="660" stroke="{grid_stroke}" stroke-width="1" stroke-dasharray="4,4"/>')
+                    grid_lines.append(f'<line x1="{gx}" y1="80" x2="{gx}" y2="660" stroke="{grid_stroke}" stroke-width="1.5" stroke-dasharray="4,4"/>')
                 for gy in range(80, 670, 70):
-                    grid_lines.append(f'<line x1="100" y1="{gy}" x2="900" y2="{gy}" stroke="{grid_stroke}" stroke-width="1" stroke-dasharray="4,4"/>')
+                    grid_lines.append(f'<line x1="100" y1="{gy}" x2="900" y2="{gy}" stroke="{grid_stroke}" stroke-width="1.5" stroke-dasharray="4,4"/>')
                 svg_items.append("\n".join(grid_lines))
 
-            # 2. Render Facilities with Click Handlers (No white legend box as requested)
+            # 2. Render Facilities
             for key in sorted_keys:
                 f = facs[key]
                 is_sel = (st.session_state['selected_facility'] == key)
                 stroke_clr = "#F59E0B" if is_sel else ("#FFFFFF" if mode == '3D_ISO' else "#38BDF8")
-                stroke_w = "5" if is_sel else "2.5"
+                stroke_w = "6" if is_sel else "2.5"
+                pulse_filter = 'filter="drop-shadow(0px 0px 12px #F59E0B)"' if is_sel else ''
 
                 x, y, w, h = f['x'], f['y'], f['w'], f['h']
                 icon = f.get('icon', '🎪')
                 w_m = f.get('w_m', 15)
                 h_m = f.get('h_m', 10)
 
-                # Direct Click JavaScript call on SVG element
-                click_js = f"onclick=\"window.top.location.search='?facility={key}';\" style=\"cursor:pointer;\""
-
                 if mode == '2D_PLAN':
                     plan_box = f"""
-                    <g {click_js} class="interactive-fac">
-                        <rect x="{x - w//2}" y="{y - h//2}" width="{w}" height="{h}" rx="8" fill="#0F172A" fill-opacity="0.9" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
-                        <line x1="{x - w//2}" y1="{y - h//2}" x2="{x + w//2}" y2="{y + h//2}" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="1"/>
-                        <line x1="{x + w//2}" y1="{y - h//2}" x2="{x - w//2}" y2="{y + h//2}" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="1"/>
+                    <g class="interactive-fac" {pulse_filter}>
+                        <rect x="{x - w//2}" y="{y - h//2}" width="{w}" height="{h}" rx="10" fill="#1E293B" fill-opacity="0.95" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                        <line x1="{x - w//2}" y1="{y - h//2}" x2="{x + w//2}" y2="{y + h//2}" stroke="#38BDF8" stroke-opacity="0.25" stroke-width="1"/>
+                        <line x1="{x + w//2}" y1="{y - h//2}" x2="{x - w//2}" y2="{y + h//2}" stroke="#38BDF8" stroke-opacity="0.25" stroke-width="1"/>
+                        {'<rect x="' + str(x - w//2 - 4) + '" y="' + str(y - h//2 - 4) + '" width="' + str(w + 8) + '" height="' + str(h + 8) + '" rx="12" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6,4"/>' if is_sel else ''}
                         <text x="{x}" y="{y - 4}" fill="#F8FAFC" font-size="14" font-weight="bold" text-anchor="middle">{icon} {f['name']}</text>
-                        <text x="{x}" y="{y + 16}" fill="#94A3B8" font-size="11" text-anchor="middle">{w_m}m × {h_m}m</text>
+                        <text x="{x}" y="{y + 16}" fill="#94A3B8" font-size="11" font-weight="600" text-anchor="middle">{w_m}m × {h_m}m</text>
                     </g>
                     """
                     svg_items.append(plan_box)
@@ -583,20 +623,22 @@ elif st.session_state['page'] == 'dashboard':
                     hex_color = f.get('hex', '#3B82F6')
                     top_y = y - 18
                     
-                    shadow = f'<ellipse cx="{x}" cy="{y + h//3}" rx="{w//2 + 8}" ry="{h//4}" fill="#000000" fill-opacity="0.3"/>'
+                    shadow = f'<ellipse cx="{x}" cy="{y + h//3}" rx="{w//2 + 8}" ry="{h//4}" fill="#000000" fill-opacity="0.4"/>'
                     
                     building_body = f"""
-                    <g {click_js} class="interactive-fac">
-                        <rect x="{x - w//2}" y="{top_y - h//2}" width="{w}" height="{h}" rx="14" fill="{hex_color}" stroke="{stroke_clr}" stroke-width="{stroke_w}" filter="drop-shadow(0px 8px 12px rgba(0,0,0,0.4))"/>
+                    <g class="interactive-fac" {pulse_filter}>
+                        {shadow}
+                        <rect x="{x - w//2}" y="{top_y - h//2}" width="{w}" height="{h}" rx="14" fill="{hex_color}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                        {'<rect x="' + str(x - w//2 - 5) + '" y="' + str(top_y - h//2 - 5) + '" width="' + str(w + 10) + '" height="' + str(h + 10) + '" rx="16" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="6,4"/>' if is_sel else ''}
                         <g transform="translate({x}, {top_y})">
-                            <rect x="-72" y="-15" width="144" height="30" rx="15" fill="#FFFFFF" fill-opacity="0.95" stroke="{hex_color}" stroke-width="2.5"/>
+                            <rect x="-75" y="-16" width="150" height="32" rx="16" fill="#FFFFFF" fill-opacity="0.95" stroke="{hex_color}" stroke-width="2.5"/>
                             <text x="0" y="5" fill="#0F172A" font-size="12" font-weight="bold" text-anchor="middle">{icon} {f['name']}</text>
                         </g>
                     </g>
                     """
-                    svg_items.append(shadow + building_body)
+                    svg_items.append(building_body)
 
-            # 3. Enhanced Crowd Flow & Pedestrian Dynamic Paths (Request #2)
+            # 3. Enhanced Crowd Flow & Pedestrian Dynamic Paths
             if show_flow:
                 gate_x, gate_y = facs['exit']['x'], facs['exit']['y']
                 info_x, info_y = facs['info']['x'], facs['info']['y']
@@ -620,7 +662,7 @@ elif st.session_state['page'] == 'dashboard':
                 </defs>
 
                 <!-- 1. Congestion Heatmap Density Distributions -->
-                <!-- 무대 스탠딩 관람존 최고 혼잡 구역 (High Congestion Density Heatmap) -->
+                <!-- 무대 스탠딩 관람존 최고 혼잡 구역 -->
                 <ellipse cx="{stage_x}" cy="{stage_y + 110}" rx="230" ry="85" fill="#EF4444" fill-opacity="0.35" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="6,4"/>
                 <text x="{stage_x}" y="{stage_y + 115}" fill="#FFFFFF" font-size="12" font-weight="900" text-anchor="middle" style="text-shadow: 0px 2px 4px #000;">🔥 관람객 인파 최고 밀집 구역 (메인 공연장)</text>
 
@@ -632,7 +674,7 @@ elif st.session_state['page'] == 'dashboard':
                 <ellipse cx="{rest_x}" cy="{rest_y}" rx="170" ry="100" fill="#10B981" fill-opacity="0.2" stroke="#059669" stroke-width="2" stroke-dasharray="4,4"/>
                 <text x="{rest_x}" y="{rest_y}" fill="#FFFFFF" font-size="11" font-weight="bold" text-anchor="middle" style="text-shadow: 0px 2px 4px #000;">🟢 유연 분산 휴게 구역</text>
 
-                <!-- 2. Pedestrian Path Vectors (사람들의 이동 길목) -->
+                <!-- 2. Pedestrian Path Vectors -->
                 <!-- Main Path 1: Entrance -> Info Center -->
                 <path d="M {gate_x} {gate_y - 20} Q {gate_x} {info_y + 50} {info_x} {info_y + 35}" fill="none" stroke="#38BDF8" stroke-width="4.5" stroke-dasharray="8,6" marker-end="url(#arrow)">
                     <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1s" repeatCount="indefinite" />
@@ -657,17 +699,17 @@ elif st.session_state['page'] == 'dashboard':
             all_svg_rendered = "\n".join(svg_items)
 
             digital_twin_3d_html = f"""
-            <div style="position: relative; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 2px solid {wall_border_color}; background-color: {bg_color};">
+            <div style="position: relative; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 2px solid {wall_border_color}; background-color: {bg_color};">
                 
-                <div style="background: rgba(15, 23, 42, 0.92); color: #F8FAFC; padding: 10px 20px; font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(8px);">
+                <div style="background: rgba(15, 23, 42, 0.95); color: #F8FAFC; padding: 10px 20px; font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(8px);">
                     <div>
                         <span style="color: #38BDF8; font-weight: bold;">📐 Spatial Twin Studio</span> | 
                         <span>표출 모드: <b>{'2D 평면 설계도' if mode == '2D_PLAN' else '입체 조감도'}</b></span> | 
-                        <span>장소: <b>{st.session_state['event_location']}</b></span>
+                        <span>선택 시설: <b style="color:#F59E0B;">{facs[st.session_state['selected_facility']]['icon']} {facs[st.session_state['selected_facility']]['name']}</b></span>
                     </div>
                     <div>
                         <span style="background: {'#EF4444' if show_flow else '#0284C7'}; color: #FFF; padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: bold;">
-                            {'🔥 동선 및 혼잡도 시각화 ON' if show_flow else 'LIVE Digital Twin'}
+                            {'🔥 동선/혼잡도 활성' if show_flow else 'LIVE Digital Twin'}
                         </span>
                     </div>
                 </div>
@@ -677,6 +719,15 @@ elif st.session_state['page'] == 'dashboard':
                     <rect x="50" y="50" width="900" height="620" rx="12" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="10,6"/>
 
                     {all_svg_rendered}
+
+                    <!-- Compass Rose 🧭 -->
+                    <g transform="translate(900, 100)">
+                        <circle cx="0" cy="0" r="28" fill="#0F172A" fill-opacity="0.9" stroke="#38BDF8" stroke-width="2"/>
+                        <text x="0" y="-12" font-size="12" fill="#EF4444" font-weight="900" text-anchor="middle">N</text>
+                        <text x="0" y="20" font-size="10" fill="#94A3B8" font-weight="bold" text-anchor="middle">S</text>
+                        <text x="16" y="4" font-size="10" fill="#94A3B8" font-weight="bold" text-anchor="middle">E</text>
+                        <text x="-16" y="4" font-size="10" fill="#94A3B8" font-weight="bold" text-anchor="middle">W</text>
+                    </g>
 
                     <!-- 축척 자 Scale Bar -->
                     <g transform="translate(740, 640)">
@@ -694,7 +745,7 @@ elif st.session_state['page'] == 'dashboard':
             """
             st.components.v1.html(digital_twin_3d_html, height=560, scrolling=False)
 
-            st.markdown("**👇 또는 아래 시설 단추를 눌러 개별 구역을 선택할 수도 있습니다:**")
+            st.markdown("**🎯 아래 원하는 시설 단추를 눌러 즉시 이동 및 배치 조작을 시작하세요:**")
             fac_keys = list(facs.keys())
             f_cols = st.columns(4)
             for i, key in enumerate(fac_keys):
@@ -714,6 +765,50 @@ elif st.session_state['page'] == 'dashboard':
             h_m_val = current_fac.get('h_m', 10)
             h_3d_m_val = current_fac.get('h_3d_m', 3)
             icon_val = current_fac.get('icon', '🎪')
+
+            st.markdown("### 🎛️ 선택 시설 좌표 및 규격 즉시 조정")
+            st.info(f"현재 선택됨: **{icon_val} {current_fac['name']}**")
+
+            # Direct Position Sliders for X & Y coordinates
+            new_x = st.slider("X 좌표 (가로 위치)", min_value=120, max_value=880, value=current_fac['x'], step=10, key=f"sl_x_{selected_key}")
+            new_y = st.slider("Y 좌표 (세로 위치)", min_value=100, max_value=650, value=current_fac['y'], step=10, key=f"sl_y_{selected_key}")
+            
+            # Direct Dimension Sliders for meters
+            new_w_m = st.slider("가로 규격 (m)", min_value=5, max_value=50, value=current_fac['w_m'], step=1, key=f"sl_wm_{selected_key}")
+            new_h_m = st.slider("세로 규격 (m)", min_value=4, max_value=40, value=current_fac['h_m'], step=1, key=f"sl_hm_{selected_key}")
+
+            # Check if slider changed
+            if (new_x != current_fac['x'] or new_y != current_fac['y'] or 
+                new_w_m != current_fac['w_m'] or new_h_m != current_fac['h_m']):
+                current_fac['x'] = new_x
+                current_fac['y'] = new_y
+                current_fac['w_m'] = new_w_m
+                current_fac['h_m'] = new_h_m
+                current_fac['w'] = new_w_m * 10
+                current_fac['h'] = new_h_m * 10
+                current_fac['reason'] = f"사용자 커스텀 조정: ({new_x}, {new_y}) 좌표 및 {new_w_m}m×{new_h_m}m 규격 적용됨."
+                st.rerun()
+
+            st.caption("⚡ **빠른 방향 이동 단추:**")
+            d_col1, d_col2, d_col3, d_col4 = st.columns(4)
+            with d_col1:
+                if st.button("⬆️ 북쪽", key="mv_n", use_container_width=True):
+                    current_fac['y'] = max(100, current_fac['y'] - 50)
+                    st.rerun()
+            with d_col2:
+                if st.button("⬇️ 남쪽", key="mv_s", use_container_width=True):
+                    current_fac['y'] = min(650, current_fac['y'] + 50)
+                    st.rerun()
+            with d_col3:
+                if st.button("⬅️ 서쪽", key="mv_w", use_container_width=True):
+                    current_fac['x'] = max(120, current_fac['x'] - 60)
+                    st.rerun()
+            with d_col4:
+                if st.button("➡️ 동쪽", key="mv_e", use_container_width=True):
+                    current_fac['x'] = min(880, current_fac['x'] + 60)
+                    st.rerun()
+
+            st.divider()
 
             st.markdown("### 🏢 시설 실측 및 AI 배치 이유")
             st.markdown(f"""
@@ -737,7 +832,7 @@ elif st.session_state['page'] == 'dashboard':
             st.markdown("### 💬 Claude-Spatial AI 챗봇")
             st.caption("자연어로 '푸드존을 더 멀리 이동해줘', '화장실을 의료센터 옆으로 옮겨줘' 등을 입력해 보세요!")
 
-            chat_box = st.container(height=260)
+            chat_box = st.container(height=240)
             with chat_box:
                 for message in st.session_state['chat_messages']:
                     with st.chat_message(message["role"]):
