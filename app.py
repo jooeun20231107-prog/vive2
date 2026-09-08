@@ -694,4 +694,4 @@ elif st.session_state['current_page'] == 'dashboard':
                 • <b>공간 유형:</b> {venue_info['type']}<br>
                 • <b>특징:</b> {venue_info['description']}
             </div>
-        </div>
+        </div>""", unsafe_allow_html=True)
