@@ -95,6 +95,32 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# 세션 상태(Session State) 기본값 초기화
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'user_name' not in st.session_state:
+    st.session_state['user_name'] = "게스트"
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'
+if 'event_name' not in st.session_state:
+    st.session_state['event_name'] = "2026 AI 융합 페스티벌"
+if 'event_purpose' not in st.session_state:
+    st.session_state['event_purpose'] = "축제/공연"
+if 'visitor_count' not in st.session_state:
+    st.session_state['visitor_count'] = 3000
+if 'budget' not in st.session_state:
+    st.session_state['budget'] = "5,000만원"
+if 'venue' not in st.session_state:
+    st.session_state['venue'] = "[충청권] 건양대학교 병설 건양고등학교 체육관 (충남 논산)"
+if 'design_generated' not in st.session_state:
+    st.session_state['design_generated'] = False
+if 'simulation_active' not in st.session_state:
+    st.session_state['simulation_active'] = True
+if 'selected_facility' not in st.session_state:
+    st.session_state['selected_facility'] = "무대"
+if 'chat_messages' not in st.session_state:
+    st.session_state['chat_messages'] = []
+
 # 대한민국 전국 주요 광역시·도 및 대학교/고등학교/체육관 축제 장소 데이터베이스
 EVENT_VENUES = {
     # [특수 / 교육기관 & 고등학교 / 대학교 축제 장소]
