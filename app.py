@@ -49,6 +49,18 @@ st.markdown("""
         margin-top: 10px;
     }
 
+    /* 3D 디지털 트윈 스토리지 컨트롤 바 */
+    .view-control-bar {
+        background: #0F172A;
+        color: #F8FAFC;
+        padding: 12px 18px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
     /* 상단 로고 버튼 및 사이드바 간격 */
     div[data-testid="stSidebarHeader"] {
         padding-top: 0.5rem;
@@ -58,59 +70,83 @@ st.markdown("""
 
 DEFAULT_FACILITIES = {
     "stage": {
-        "name": "공연장",
+        "name": "메인 무대 (Main Stage)",
         "icon": "🎪",
         "hex": "#8B5CF6",
-        "x": 500, "y": 100, "w": 240, "h": 110,
+        "hex_side": "#6D28D9",
+        "hex_top": "#A78BFA",
+        "x": 500, "y": 120, "w": 260, "h": 120, "height_3d": 45,
+        "w_m": 26, "h_m": 12, "h_3d_m": 8,
         "reason": "북쪽 중앙 상단에 위치시켜 모든 관람객의 시야각과 음향 전달을 극대화했습니다."
     },
     "booth": {
-        "name": "체험부스",
+        "name": "체험 부스 단지",
         "icon": "🛍️",
         "hex": "#3B82F6",
-        "x": 190, "y": 130, "w": 180, "h": 150,
+        "hex_side": "#1D4ED8",
+        "hex_top": "#60A5FA",
+        "x": 200, "y": 180, "w": 180, "h": 140, "height_3d": 25,
+        "w_m": 18, "h_m": 14, "h_3d_m": 3.5,
         "reason": "북서쪽 진입 구역에 부스 단지를 형성하여 초기 관람객 유입률을 높였습니다."
     },
     "food": {
-        "name": "푸드존",
+        "name": "푸드트럭 존",
         "icon": "🍔",
         "hex": "#F97316",
-        "x": 190, "y": 380, "w": 180, "h": 150,
+        "hex_side": "#C2410C",
+        "hex_top": "#FB923C",
+        "x": 200, "y": 420, "w": 180, "h": 150, "height_3d": 30,
+        "w_m": 18, "h_m": 15, "h_3d_m": 4,
         "reason": "서쪽 측면에 독립 배치하여 조리 연기 확산을 막고 관람 동선과 유연하게 분리했습니다."
     },
     "rest": {
-        "name": "휴게공간",
+        "name": "잔디 휴게 광장",
         "icon": "🏕️",
         "hex": "#10B981",
-        "x": 500, "y": 360, "w": 280, "h": 180,
+        "hex_side": "#047857",
+        "hex_top": "#34D399",
+        "x": 500, "y": 380, "w": 300, "h": 180, "height_3d": 12,
+        "w_m": 30, "h_m": 18, "h_3d_m": 1.5,
         "reason": "중앙 잔디 광장에 위치시켜 메인 무대 감상과 쉼터 역할을 동시에 수행합니다."
     },
     "medical": {
-        "name": "응급의료센터",
+        "name": "응급 의료 센터",
         "icon": "🚑",
         "hex": "#EF4444",
-        "x": 820, "y": 120, "w": 160, "h": 100,
+        "hex_side": "#B91C1C",
+        "hex_top": "#F87171",
+        "x": 820, "y": 150, "w": 160, "h": 100, "height_3d": 22,
+        "w_m": 16, "h_m": 10, "h_3d_m": 3,
         "reason": "동쪽 외곽 비상 도로 옆에 배치하여 구급차의 최단 진출입 코스를 보장합니다."
     },
     "toilet": {
-        "name": "화장실",
+        "name": "위생 편의 시설",
         "icon": "🚻",
-        "hex": "#2563EB",
-        "x": 820, "y": 260, "w": 160, "h": 100,
+        "hex": "#0284C7",
+        "hex_side": "#0369A1",
+        "hex_top": "#38BDF8",
+        "x": 820, "y": 300, "w": 160, "h": 100, "height_3d": 20,
+        "w_m": 16, "h_m": 10, "h_3d_m": 2.8,
         "reason": "동쪽 측면에 위치시켜 인프라 접근성을 확보하고 대기 줄 최소화를 유도합니다."
     },
     "info": {
-        "name": "안내센터",
+        "name": "종합 안내 센터",
         "icon": "ℹ️",
         "hex": "#EC4899",
-        "x": 500, "y": 580, "w": 160, "h": 60,
+        "hex_side": "#BE185D",
+        "hex_top": "#F472B6",
+        "x": 500, "y": 590, "w": 180, "h": 70, "height_3d": 18,
+        "w_m": 18, "h_m": 7, "h_3d_m": 2.5,
         "reason": "주 출입구 정면에 위치시켜 길 안내 및 관람 문의를 신속하게 처리합니다."
     },
     "exit": {
-        "name": "출입구",
+        "name": "메인 출입 게이트",
         "icon": "🚪",
-        "hex": "#F43F5E",
-        "x": 500, "y": 660, "w": 180, "h": 50,
+        "hex": "#64748B",
+        "hex_side": "#334155",
+        "hex_top": "#94A3B8",
+        "x": 500, "y": 670, "w": 200, "h": 40, "height_3d": 15,
+        "w_m": 20, "h_m": 4, "h_3d_m": 3,
         "reason": "남쪽 정문에 위치하여 대규모 인파의 효율적 진출입 및 비상 대피를 유도합니다."
     }
 }
@@ -129,9 +165,15 @@ if 'selected_facility' not in st.session_state:
     st.session_state['selected_facility'] = 'stage'
 if 'facilities' not in st.session_state:
     st.session_state['facilities'] = DEFAULT_FACILITIES.copy()
+if 'view_mode' not in st.session_state:
+    st.session_state['view_mode'] = '3D_ISO' # 3D_ISO, 2D_PLAN, 3D_WALK
+if 'lighting_mode' not in st.session_state:
+    st.session_state['lighting_mode'] = 'Day' # Day, Night
+if 'show_grid' not in st.session_state:
+    st.session_state['show_grid'] = True
 if 'chat_messages' not in st.session_state:
     st.session_state['chat_messages'] = [
-        {"role": "assistant", "content": "안녕하세요! AI 이벤트 아키텍트입니다. '푸드존을 더 멀리 이동해줘' 또는 '화장실을 의료 센터 근처로 배치해줘'와 같이 원하시는 배치를 말씀해주세요."}
+        {"role": "assistant", "content": "안녕하세요! 오늘의집 3D 도면 스타일의 실시간 입체 디지털 트윈 엔진이 적용되었습니다. '무대를 더 크게 해줘', '푸드존을 서쪽으로 이동해줘'와 같이 자유롭게 명령해주세요."}
     ]
 
 def parse_and_apply_ai_command(prompt: str):
@@ -347,7 +389,7 @@ if st.session_state['page'] == 'home':
 
 elif st.session_state['page'] == 'dashboard':
     st.markdown("## 📊 AI 디지털 트윈 공간 설계 대시보드")
-    st.caption("🏞️ 실제 축제장 현장 조감도 기반 입체 디지털 트윈 모드입니다.")
+    st.caption("🏢 실제 축제장 (서울 올림픽공원 잔디마당: 100m × 72m) 규격 기반 3D 공간 스튜디오 디지털 트윈입니다.")
 
     with st.expander("📌 행사 기본 정보 및 예산 설정", expanded=not st.session_state['digital_twin_generated']):
         with st.form("event_input_form"):
@@ -359,17 +401,17 @@ elif st.session_state['page'] == 'dashboard':
                 st.number_input("예상 방문객 수 (명)", value=5000, step=500)
                 st.text_input("예산", "5,000만원")
             with ic3:
-                st.text_input("장소", "서울 올림픽공원 잔디마당")
+                st.text_input("장소", "서울 올림픽공원 잔디마당 (100m x 72m)")
                 st.text_input("진행 시간", "5시간")
 
-            btn_gen = st.form_submit_button("✨ AI 이벤트 디자인 생성", type="primary", use_container_width=True)
+            btn_gen = st.form_submit_button("✨ 3D 입체 디지털 트윈 공간 생성", type="primary", use_container_width=True)
             if btn_gen:
                 st.session_state['digital_twin_generated'] = True
                 st.session_state['facilities'] = DEFAULT_FACILITIES.copy()
-                st.toast("AI가 실제 장소 규격에 맞는 조감도 디지털 트윈을 생성했습니다!")
+                st.toast("실제 올림픽공원 잔디마당 공간 규격(7,200m²)에 입각한 3D 디지털 트윈 스튜디오가 구성되었습니다!")
 
     if not st.session_state['digital_twin_generated']:
-        st.info("👆 위 '행사 기본 정보 및 예산 설정'을 확인하고 [✨ AI 이벤트 디자인 생성] 버튼을 누르시면 디지털 트윈 도면이 펼쳐집니다.")
+        st.info("👆 위 '행사 기본 정보 및 예산 설정'을 확인하고 [✨ 3D 입체 디지털 트윈 공간 생성] 버튼을 누르시면 오늘의집 스타일 3D 입체 공간 도면이 펼쳐집니다.")
     else:
         st.markdown("""
             <div style="background-color: #FFFFFF; padding: 12px 20px; border-radius: 12px; border: 1px solid #CBD5E1; margin-bottom: 15px; display: flex; justify-content: space-between; font-size:0.92rem;">
@@ -377,86 +419,210 @@ elif st.session_state['page'] == 'dashboard':
                 <span>🎯 <b>목적:</b> 축제/공연</span>
                 <span>👥 <b>예상 인원:</b> 5,000명</span>
                 <span>💰 <b>예산:</b> 5,000만원</span>
-                <span>📍 <b>장소:</b> 올림픽공원 잔디마당</span>
+                <span>📏 <b>실제 규격:</b> 100m × 72m (7,200㎡)</span>
             </div>
         """, unsafe_allow_html=True)
+
+        v_col1, v_col2, v_col3, v_col4 = st.columns([2, 1.2, 1.2, 1.2])
+        with v_col1:
+            view_choice = st.radio(
+                "뷰 포트 (오늘의집 3D 스튜디오 모드)",
+                ["🚁 3D 입체 조감도 (Isometric 3D)", "📐 2D 평면 설계도 (Floor Plan)", "👁️ 관람객 눈높이 3D 뷰 (FPV)"],
+                horizontal=True,
+                index=0 if st.session_state['view_mode'] == '3D_ISO' else (1 if st.session_state['view_mode'] == '2D_PLAN' else 2)
+            )
+            if "3D 입체" in view_choice:
+                st.session_state['view_mode'] = '3D_ISO'
+            elif "2D 평면" in view_choice:
+                st.session_state['view_mode'] = '2D_PLAN'
+            else:
+                st.session_state['view_mode'] = '3D_WALK'
+
+        with v_col2:
+            st.session_state['lighting_mode'] = st.selectbox("조명 환경", ["☀️ 주간 (Daylight)", "🌙 야간 (Night Illuminance)"], index=0 if st.session_state['lighting_mode'] == 'Day' else 1)
+        
+        with v_col3:
+            st.session_state['show_grid'] = st.checkbox("10m 거리 격자 표시", value=st.session_state['show_grid'])
+
+        with v_col4:
+            if st.button("🔄 3D 카메라인덱스 리셋", use_container_width=True):
+                st.toast("3D 디지털 트윈 카메라 시점이 기본 45도 조감각으로 초기화되었습니다.")
 
         col_main_left, col_main_right = st.columns([2.3, 1])
 
         with col_main_left:
-            st.markdown("### 🎪 행사장 배치도 (디지털 트윈 기반)")
-            st.caption("AI가 구역별 동선과 안전성을 종합 분석하여 입체 조감도 형태로 배치한 현장 도면입니다.")
-
+            st.markdown("### 🏢 3D 입체 공간 디지털 트윈 (Spatial Twin)")
+            
             facs = st.session_state['facilities']
+            is_night = "Night" in st.session_state['lighting_mode']
+            mode = st.session_state['view_mode']
 
-            svg_elements = []
-            for key, f in facs.items():
+            # Generate depth-sorted 3D elements
+            sorted_keys = sorted(facs.keys(), key=lambda k: facs[k]['y'])
+
+            bg_color = "#0B132B" if is_night else "#3B7A42"
+            grass_grid_stroke = "#1E293B" if is_night else "#2D5A33"
+            ground_slab_color = "#1E293B" if is_night else "#2C5230"
+            wall_border_color = "#38BDF8" if is_night else "#22C55E"
+
+            svg_items = []
+
+            # Add 3D sound/view zone for stage
+            stage_fac = facs['stage']
+            if mode == '3D_ISO':
+                svg_items.append(f"""
+                <!-- 무대 음향 영향권 3D 퍼짐 표식 -->
+                <ellipse cx="{stage_fac['x']}" cy="{stage_fac['y'] + 80}" rx="320" ry="160" fill="#8B5CF6" fill-opacity="{0.12 if not is_night else 0.25}" stroke="#A78BFA" stroke-width="2" stroke-dasharray="6,4"/>
+                <text x="{stage_fac['x']}" y="{stage_fac['y'] + 230}" fill="#C084FC" font-size="12" font-weight="bold" text-anchor="middle">🔊 무대 주 음향 유효 반경 (80m)</text>
+                """)
+
+            # Add 10m scale grid
+            if st.session_state['show_grid']:
+                grid_lines = []
+                for gx in range(100, 950, 80):
+                    grid_lines.append(f'<line x1="{gx}" y1="80" x2="{gx}" y2="660" stroke="{grass_grid_stroke}" stroke-width="1" stroke-dasharray="4,4"/>')
+                for gy in range(80, 670, 70):
+                    grid_lines.append(f'<line x1="100" y1="{gy}" x2="900" y2="{gy}" stroke="{grass_grid_stroke}" stroke-width="1" stroke-dasharray="4,4"/>')
+                svg_items.append("\n".join(grid_lines))
+
+            # Render 3D Extruded Blocks or 2D Boxes based on mode
+            for key in sorted_keys:
+                f = facs[key]
                 is_sel = (st.session_state['selected_facility'] == key)
-                stroke_clr = "#0284C7" if is_sel else "#FFFFFF"
-                stroke_w = "4" if is_sel else "2"
+                stroke_clr = "#38BDF8" if is_sel else ("#FFFFFF" if not is_night else "#94A3B8")
+                stroke_w = "4" if is_sel else "1.5"
+
+                x, y, w, h = f['x'], f['y'], f['w'], f['h']
+                h3d = f['height_3d']
+
+                if mode == '3D_ISO':
+                    # Isometric 3D Box Construction
+                    # Top face offset by h3d
+                    top_y = y - h3d
+                    
+                    # Drop shadow
+                    shadow = f"""
+                    <ellipse cx="{x}" cy="{y + h//3}" rx="{w//2 + 10}" ry="{h//3 + 5}" fill="#000000" fill-opacity="0.35"/>
+                    """
+                    
+                    # 3D Front Face
+                    front_face = f"""
+                    <path d="M {x - w//2} {top_y + h//2} 
+                             L {x + w//2} {top_y + h//2} 
+                             L {x + w//2} {y + h//2} 
+                             L {x - w//2} {y + h//2} Z" 
+                          fill="{f['hex_side']}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                    """
+
+                    # 3D Side Face (Right)
+                    side_face = f"""
+                    <path d="M {x + w//2} {top_y - h//2} 
+                             L {x + w//2 + 20} {top_y - h//2 + 10} 
+                             L {x + w//2 + 20} {y - h//2 + 10} 
+                             L {x + w//2} {top_y + h//2} Z" 
+                          fill="{f['hex_side']}" fill-opacity="0.8" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                    """
+
+                    # 3D Top Face
+                    top_face = f"""
+                    <polygon points="{x - w//2},{top_y - h//2} 
+                                     {x + w//2},{top_y - h//2} 
+                                     {x + w//2},{top_y + h//2} 
+                                     {x - w//2},{top_y + h//2}" 
+                             fill="{f['hex_top']}" stroke="{stroke_clr}" stroke-width="{stroke_w}" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.3))"/>
+                    """
+
+                    # Spotlight effect for stage in night mode
+                    spotlight = ""
+                    if is_night and key == 'stage':
+                        spotlight = f"""
+                        <polygon points="{x},{top_y} {x-180},{top_y+350} {x+180},{top_y+350}" fill="url(#stageLightGrad)" fill-opacity="0.4"/>
+                        """
+
+                    # Label and metric text
+                    label = f"""
+                    <g transform="translate({x}, {top_y})">
+                        <text x="0" y="-8" fill="#FFFFFF" font-size="15" font-weight="900" text-anchor="middle" style="font-family: sans-serif; text-shadow: 0px 2px 4px rgba(0,0,0,0.8);">{f['icon']} {f['name']}</text>
+                        <text x="0" y="10" fill="#E2E8F0" font-size="11" font-weight="700" text-anchor="middle">{f['w_m']}m × {f['h_m']}m (높이 {f['h_3d_m']}m)</text>
+                    </g>
+                    """
+
+                    svg_items.append(shadow + spotlight + front_face + side_face + top_face + label)
+
+                elif mode == '2D_PLAN':
+                    # Architectural 2D Floor Plan layout
+                    plan_box = f"""
+                    <rect x="{x - w//2}" y="{y - h//2}" width="{w}" height="{h}" rx="8" fill="{f['hex']}" fill-opacity="0.85" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                    <line x1="{x - w//2}" y1="{y - h//2}" x2="{x + w//2}" y2="{y + h//2}" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+                    <line x1="{x + w//2}" y1="{y - h//2}" x2="{x - w//2}" y2="{y + h//2}" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+                    <text x="{x}" y="{y}" fill="#FFFFFF" font-size="14" font-weight="bold" text-anchor="middle">{f['icon']} {f['name']}</text>
+                    <text x="{x}" y="{y + 16}" fill="#CBD5E1" font-size="10" text-anchor="middle">{f['w_m']}m × {f['h_m']}m</text>
+                    """
+                    svg_items.append(plan_box)
+
+                else: # 3D_WALK - Viewer Perspective
+                    cam_y = y * 0.7 + 120
+                    walk_box = f"""
+                    <rect x="{x - w//2}" y="{cam_y - h3d*2}" width="{w}" height="{h3d*2.5}" rx="12" fill="{f['hex_top']}" stroke="{stroke_clr}" stroke-width="{stroke_w}"/>
+                    <text x="{x}" y="{cam_y - h3d}" fill="#FFFFFF" font-size="16" font-weight="bold" text-anchor="middle">{f['icon']} {f['name']}</text>
+                    """
+                    svg_items.append(walk_box)
+
+            all_svg_rendered = "\n".join(svg_items)
+
+            digital_twin_3d_html = f"""
+            <div style="position: relative; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 2px solid {wall_border_color}; bg-color: {bg_color};">
                 
-                elem_svg = f"""
-                <g transform="translate({f['x'] - f['w']//2}, {f['y'] - f['h']//2})">
-                    <rect x="0" y="0" width="{f['w']}" height="{f['h']}" rx="16" fill="{f['hex']}" fill-opacity="0.88" stroke="{stroke_clr}" stroke-width="{stroke_w}" filter="drop-shadow(0px 8px 12px rgba(0,0,0,0.25))"/>
-                    <rect x="8" y="8" width="{f['w']-16}" height="{f['h']-16}" rx="12" fill="#FFFFFF" fill-opacity="0.15"/>
-                    <text x="{f['w']//2}" y="{f['h']//2 + 6}" fill="#FFFFFF" font-size="16" font-weight="900" text-anchor="middle" style="font-family: sans-serif;">{f['icon']} {f['name']}</text>
-                </g>
-                """
-                svg_elements.append(elem_svg)
+                <!-- 오늘의집 스타일 3D 공간 상단 상태바 -->
+                <div style="background: rgba(15, 23, 42, 0.9); color: #F8FAFC; padding: 10px 20px; font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(8px);">
+                    <div>
+                        <span style="color: #38BDF8; font-weight: bold;">📐 3D Spatial Twin Studio</span> | 
+                        <span>렌더링 모드: <b>{mode}</b></span> | 
+                        <span>부지 총 면적: <b>7,200 ㎡ (올림픽공원)</b></span>
+                    </div>
+                    <div>
+                        <span style="background: #0284C7; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: bold;">LIVE 3D Engine</span>
+                    </div>
+                </div>
 
-            all_svg_items = "\n".join(svg_elements)
-
-            festival_map_html = f"""
-            <div style="position: relative; width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.18); border: 2px solid #38BDF8;">
-                <svg viewBox="0 0 1000 720" style="width: 100%; height: auto; background-color: #3D7C47; display: block;">
+                <svg viewBox="0 0 1000 720" style="width: 100%; height: auto; background-color: {bg_color}; display: block;">
                     <defs>
-                        <pattern id="grassPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                            <rect width="40" height="40" fill="#4B8B52"/>
-                            <circle cx="20" cy="20" r="18" fill="#43804A"/>
-                        </pattern>
-                        <linearGradient id="roadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#E2E8F0" />
-                            <stop offset="100%" stop-color="#CBD5E1" />
+                        <linearGradient id="groundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="{ground_slab_color}" />
+                            <stop offset="100%" stop-color="{bg_color}" />
+                        </linearGradient>
+                        <linearGradient id="stageLightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#C084FC" stop-opacity="0.8" />
+                            <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.0" />
                         </linearGradient>
                     </defs>
 
-                    <rect width="1000" height="720" fill="url(#grassPattern)"/>
+                    <!-- 3D Ground Base Slab -->
+                    <polygon points="60,60 940,60 980,680 20,680" fill="url(#groundGrad)" stroke="{wall_border_color}" stroke-width="3"/>
 
-                    <rect x="30" y="30" width="940" height="660" rx="24" fill="none" stroke="#2D5A33" stroke-width="12"/>
+                    <!-- Perimeter 3D Fence / Safety Boundary -->
+                    <polygon points="80,80 920,80 950,660 50,660" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="12,8"/>
 
-                    <path d="M 500,690 L 500,500 L 220,500 L 220,200 L 500,200 L 820,200 L 820,500 L 500,500" stroke="url(#roadGrad)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    
-                    <path d="M 500,680 L 500,500 L 220,500 L 220,200 L 500,200 L 820,200 L 820,500 L 500,500" stroke="#0284C7" stroke-width="4" stroke-dasharray="10,8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <!-- Rendered 3D Facilities & Overlay -->
+                    {all_svg_rendered}
 
-                    <circle cx="500" cy="380" r="110" fill="#22C55E" fill-opacity="0.3" stroke="#86EFAC" stroke-width="3" stroke-dasharray="6,4"/>
-
-                    <circle cx="80" cy="80" r="22" fill="#2D5A33"/>
-                    <circle cx="140" cy="60" r="28" fill="#2D5A33"/>
-                    <circle cx="920" cy="80" r="24" fill="#2D5A33"/>
-                    <circle cx="860" cy="60" r="26" fill="#2D5A33"/>
-                    <circle cx="70" cy="640" r="25" fill="#2D5A33"/>
-                    <circle cx="930" cy="640" r="25" fill="#2D5A33"/>
-
-                    {all_svg_items}
-
-                    <g transform="translate(40, 520)">
-                        <rect x="0" y="0" width="150" height="150" rx="12" fill="#FFFFFF" fill-opacity="0.9" stroke="#CBD5E1" stroke-width="2"/>
-                        <text x="12" y="24" font-size="13" font-weight="bold" fill="#0F172A">📍 범례 (Legend)</text>
-                        <circle cx="20" cy="44" r="6" fill="#8B5CF6"/><text x="34" y="48" font-size="11" fill="#334155" font-weight="bold">공연장</text>
-                        <circle cx="20" cy="62" r="6" fill="#3B82F6"/><text x="34" y="66" font-size="11" fill="#334155" font-weight="bold">체험부스</text>
-                        <circle cx="20" cy="80" r="6" fill="#F97316"/><text x="34" y="84" font-size="11" fill="#334155" font-weight="bold">푸드존</text>
-                        <circle cx="20" cy="98" r="6" fill="#10B981"/><text x="34" y="102" font-size="11" fill="#334155" font-weight="bold">휴게공간</text>
-                        <circle cx="20" cy="116" r="6" fill="#EF4444"/><text x="34" y="120" font-size="11" fill="#334155" font-weight="bold">의료센터/화장실</text>
-                        <line x1="14" y1="134" x2="28" y2="134" stroke="#0284C7" stroke-width="3" stroke-dasharray="3,2"/>
-                        <text x="34" y="138" font-size="11" fill="#0284C7" font-weight="bold">주요 이동 동선</text>
+                    <!-- Scale Ruler Bar (오늘의집 3D 축척 자) -->
+                    <g transform="translate(740, 640)">
+                        <rect x="0" y="0" width="220" height="36" rx="8" fill="#0F172A" fill-opacity="0.88" stroke="#475569" stroke-width="1.5"/>
+                        <line x1="20" y1="20" x2="180" y2="20" stroke="#38BDF8" stroke-width="3"/>
+                        <line x1="20" y1="12" x2="20" y2="24" stroke="#38BDF8" stroke-width="2"/>
+                        <line x1="100" y1="15" x2="100" y2="24" stroke="#38BDF8" stroke-width="1.5"/>
+                        <line x1="180" y1="12" x2="180" y2="24" stroke="#38BDF8" stroke-width="2"/>
+                        <text x="20" y="10" font-size="10" fill="#94A3B8" font-weight="bold">0m</text>
+                        <text x="100" y="10" font-size="10" fill="#94A3B8" font-weight="bold">10m</text>
+                        <text x="180" y="10" font-size="10" fill="#38BDF8" font-weight="bold">20m Scale</text>
                     </g>
-
                 </svg>
             </div>
             """
-            st.components.v1.html(festival_map_html, height=540, scrolling=False)
+            st.components.v1.html(digital_twin_3d_html, height=560, scrolling=False)
 
-            st.markdown("**👇 시설 버튼을 선택하면 오른쪽에 해당 공간의 최적 배치 사유가 안내됩니다:**")
+            st.markdown("**👇 3D 공간 내 개별 시설을 선택하면 상세 실측 스펙 및 최적배치 사유가 조회됩니다:**")
             fac_keys = list(facs.keys())
             f_cols = st.columns(4)
             for i, key in enumerate(fac_keys):
@@ -472,12 +638,18 @@ elif st.session_state['page'] == 'dashboard':
             selected_key = st.session_state['selected_facility']
             current_fac = facs[selected_key]
             
-            st.markdown("### 💡 공간 배치 요약")
+            st.markdown("### 🏢 3D 시설 실측 데이터")
             st.markdown(f"""
                 <div class="reason-box">
                     <h4 style="color: {current_fac['hex']}; margin-top: 0;">{current_fac['icon']} {current_fac['name']}</h4>
-                    <p style="color: #334155; font-size: 0.95rem; line-height: 1.6;">
-                        <b>[AI 아키텍처 배치 근거]</b><br>
+                    <p style="color: #0F172A; font-size: 0.9rem; margin-bottom: 8px;">
+                        • <b>실제 가로×세로:</b> {current_fac['w_m']}m × {current_fac['h_m']}m<br>
+                        • <b>점유 면적:</b> {current_fac['w_m'] * current_fac['h_m']} ㎡<br>
+                        • <b>3D 입체 높이:</b> {current_fac['h_3d_m']}m 고도
+                    </p>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #BAE6FD;">
+                    <p style="color: #334155; font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                        <b>[AI 공간 설계 근거]</b><br>
                         {current_fac['reason']}
                     </p>
                 </div>
@@ -485,26 +657,26 @@ elif st.session_state['page'] == 'dashboard':
 
             st.divider()
 
-            st.markdown("### 🔥 AI 군중 시뮬레이션")
-            if st.button("🚨 AI 군중 예측 (혼잡도 Heatmap 실행)", type="primary", use_container_width=True):
+            st.markdown("### 🔥 AI 군중 밀도 시뮬레이션")
+            if st.button("🚨 3D 군중 혼잡도 Heatmap 실행", type="primary", use_container_width=True):
                 st.session_state['simulated'] = True
 
             if st.session_state['simulated']:
-                st.caption("구역별 인파 밀집도 예측 (붉은색: 인파 정체 위험 구역)")
+                st.caption("구역별 3D 밀집도 예측 (붉은색: 인파 정체 위험 구역)")
                 np.random.seed(42)
                 sim_grid = np.random.rand(12, 12) * 50
                 sim_grid[2, 5] += 40  # 무대 앞 혼잡
                 sim_grid[8, 2] += 30  # 푸드존 앞 혼잡
                 fig = px.imshow(sim_grid, color_continuous_scale='YlOrRd', labels=dict(color="혼잡도"))
-                fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200)
+                fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
                 st.plotly_chart(fig, use_container_width=True)
 
             st.divider()
 
-            st.markdown("### 💬 AI 설계 어시스턴트")
-            st.caption("AI 대화창에 배치를 명령해보세요!")
+            st.markdown("### 💬 AI 3D 설계 어시스턴트")
+            st.caption("AI 챗봇으로 3D 배치를 자율 변경하세요!")
 
-            chat_box = st.container(height=260)
+            chat_box = st.container(height=240)
             with chat_box:
                 for message in st.session_state['chat_messages']:
                     with st.chat_message(message["role"]):
