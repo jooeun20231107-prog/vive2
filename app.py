@@ -160,8 +160,8 @@ if "zone_data" not in st.session_state:
         "메인무대": {
             "icon": "🎭",
             "color": "#3b82f6",
-            "position": [50, 82],
-            "size": [30, 18],
+            "position": [50, 88],
+            "size": [28, 14],
             "rationale": "메인 출입구에서 가장 멀고 탁 트인 잔디 광장의 북쪽에 배치하여 5,000명 관중 소음 분산 및 최고 시야각 확보. 비상 피난 동선 확보 완료.",
             "score": "98점 (최적화 완료)",
             "capacity": "최대 3,000명 동시 관람"
@@ -169,17 +169,17 @@ if "zone_data" not in st.session_state:
         "푸드존": {
             "icon": "🍔",
             "color": "#f97316",
-            "position": [25, 52],
-            "size": [20, 14],
-            "rationale": "상하수도 및 전력 공급관 접근이 용이한 서쪽 외곽 배치. 관람석과의 거리를 약 25m 유지하여 음식 냄새 유입 최소화 및 대기 줄 가이드라인 적용.",
+            "position": [18, 55],
+            "size": [20, 12],
+            "rationale": "상하수도 및 전력 공급관 접근이 용이한 서쪽 외곽 배치. 관람석과의 거리를 유지하여 음식 냄새 유입 최소화 및 대기 줄 가이드라인 적용.",
             "score": "92점 (양호)",
             "capacity": "푸드트럭 12대 & 테이블 40개"
         },
         "체험부스": {
             "icon": "🎪",
             "color": "#8b5cf6",
-            "position": [20, 32],
-            "size": [18, 14],
+            "position": [18, 80],
+            "size": [20, 14],
             "rationale": "입장객 이동 동선의 좌측 순환 코스 배치. 이동 중 자연스러운 체험 유도를 통해 병목 현상을 방지하고 참여율 극대화.",
             "score": "90점 (우수)",
             "capacity": "20개 규격 부스"
@@ -187,8 +187,8 @@ if "zone_data" not in st.session_state:
         "휴식공간": {
             "icon": "🌲",
             "color": "#10b981",
-            "position": [50, 48],
-            "size": [22, 16],
+            "position": [50, 52],
+            "size": [24, 16],
             "rationale": "행사장 중앙 쉼터로 나무 그늘 아래 벤치 및 파라솔 배치. 무대 소음이 알맞게 전달되며 피로도를 줄일 수 있는 완충 지대.",
             "score": "91점 (양호)",
             "capacity": "동시 휴식 200명 수용"
@@ -196,8 +196,8 @@ if "zone_data" not in st.session_state:
         "안내센터": {
             "icon": "ℹ️",
             "color": "#ec4899",
-            "position": [50, 20],
-            "size": [14, 10],
+            "position": [55, 28],
+            "size": [16, 10],
             "rationale": "주 출입구 바로 전면에 위치하여 방문객 유실물 문의, 미아 보호, 행사 안내를 즉시 수행할 수 있는 병목 방지 통로 측면 배치.",
             "score": "95점 (매우 우수)",
             "capacity": "안내 요원 6명 상주"
@@ -205,8 +205,8 @@ if "zone_data" not in st.session_state:
         "화장실": {
             "icon": "🚻",
             "color": "#06b6d4",
-            "position": [82, 45],
-            "size": [14, 12],
+            "position": [84, 55],
+            "size": [16, 12],
             "rationale": "바람이 부는 하류 방향 동쪽 구역에 배치하여 악취 피해 방지. 여성 화장실 비율 1:1.5 확충 및 동선 교차 방지 구역 지정.",
             "score": "94점 (매우 우수)",
             "capacity": "이동식 화장실 15칸"
@@ -214,8 +214,8 @@ if "zone_data" not in st.session_state:
         "응급의료센터": {
             "icon": "🏥",
             "color": "#ef4444",
-            "position": [80, 72],
-            "size": [16, 12],
+            "position": [82, 80],
+            "size": [18, 12],
             "rationale": "구급차 진출입이 즉시 가능한 외각 전용 도로와 연결. 무대 부상자 발생 시 최단 거리(15초) 수송 동선 확보.",
             "score": "97점 (최적화 완료)",
             "capacity": "응급 침대 4대 & 구급차 직결"
@@ -223,7 +223,7 @@ if "zone_data" not in st.session_state:
         "출입구": {
             "icon": "🚪",
             "color": "#1e293b",
-            "position": [50, 6],
+            "position": [50, 10],
             "size": [18, 8],
             "rationale": "소방법 규정 준수. 대형 군중 이동 통로와 직결되는 넓이 8m 이상의 피난 유도선 및 분산 입출입 구역 설정.",
             "score": "100점 (법적 기준 준수)",
@@ -434,36 +434,42 @@ elif st.session_state.page == "dashboard":
         col_main_map, col_side_eval = st.columns([7, 5])
 
         with col_main_map:
-            st.markdown("#### 🗺️ Archisketch 행사 도면 (🔴 빨간색 테두리 전용 영역 배치)")
+            st.markdown("#### 🗺️ Archisketch 페스티벌 조감도 도면")
 
-            # 파일 업로드 (업로드한 도면/사진이 빨간색 테두리 안쪽에 맞춤 적용됨)
-            uploaded_map_img = st.file_uploader("🖼️ 배경 행사 도면 사진 업로드 (빨간색 테두리 안쪽에 자동 적용)", type=["png", "jpg", "jpeg"], key="map_img_uploader")
+            uploaded_map_img = st.file_uploader("🖼️ 배경 행사 도면 / 입체 이미지 업로드", type=["png", "jpg", "jpeg"], key="map_img_uploader")
 
             fig_map = go.Figure()
 
-            # 1. 외곽 바깥 영역 (비사용 구역)
+            # 1. Base Map Background (Park Lawn & Walkways setup)
+            # Outer natural green park surround
             fig_map.add_shape(
                 type="rect", x0=0, y0=0, x1=100, y1=100,
-                fillcolor="#f1f5f9",
-                line=dict(color="#cbd5e1", width=1)
+                fillcolor="#4ade80", opacity=0.3,
+                line=dict(color="#22c55e", width=1)
             )
 
-            # 2. 🔴 RED BORDER: 행사 허가/사용 지정 구역 (빨간색 테두리)
+            # Central Lawn Plaza
             fig_map.add_shape(
-                type="rect", x0=10, y0=10, x1=90, y1=90,
-                fillcolor="#ffffff" if uploaded_map_img is None else "rgba(255,255,255,0.1)",
-                line=dict(color="#ef4444", width=4, dash="solid")
+                type="rect", x0=30, y0=38, x1=70, y1=66,
+                fillcolor="#22c55e", opacity=0.45,
+                line=dict(color="#16a34a", width=2, dash="dot")
             )
 
-            # 빨간색 테두리 라벨
-            fig_map.add_annotation(
-                x=50, y=94,
-                text="<b>🔴 행사 지정 허가 구역 (빨간색 테두리 안쪽 영역만 사용)</b>",
-                showarrow=False,
-                font=dict(color="#ef4444", size=13)
+            # Main Stage Area Top North
+            fig_map.add_shape(
+                type="rect", x0=32, y0=80, x1=68, y1=96,
+                fillcolor="#3b82f6", opacity=0.25,
+                line=dict(color="#2563eb", width=2)
             )
 
-            # 3. 업로드한 사진을 빨간색 테두리 안쪽(x: 10~90, y: 10~90)에 맞춰 배치
+            # Paved Main Walkway Ring around central lawn
+            fig_map.add_shape(
+                type="rect", x0=26, y0=34, x1=74, y1=70,
+                fillcolor="rgba(241, 245, 249, 0)",
+                line=dict(color="#cbd5e1", width=14)
+            )
+
+            # 2. Uploaded Custom Background Image (if any)
             if uploaded_map_img is not None:
                 import base64
                 encoded_img = base64.b64encode(uploaded_map_img.read()).decode("utf-8")
@@ -472,28 +478,28 @@ elif st.session_state.page == "dashboard":
                     dict(
                         source=img_data_url,
                         xref="x", yref="y",
-                        x=10, y=90,
-                        sizex=80, sizey=80,
+                        x=0, y=100,
+                        sizex=100, sizey=100,
                         sizing="stretch",
-                        opacity=0.85,
+                        opacity=0.9,
                         layer="below"
                     )
                 )
 
-            # 4. Crowd Heatmap Overlay (빨간색 테두리 안쪽 영역에 제한)
+            # 3. Crowd Heatmap Overlay
             if st.session_state.show_heatmap_overlay:
                 np.random.seed(42)
-                x_h = np.random.uniform(15, 85, 200)
-                y_h = np.random.uniform(15, 85, 200)
-                # 메인무대 및 주변 밀집 군중
+                x_h = np.random.uniform(5, 95, 200)
+                y_h = np.random.uniform(5, 95, 200)
+                # Main stage crowd density
                 x_h = np.append(x_h, np.random.normal(50, 10, 400))
-                y_h = np.append(y_h, np.random.normal(80, 6, 400))
-                x_h = np.append(x_h, np.random.normal(25, 6, 200))
-                y_h = np.append(y_h, np.random.normal(52, 6, 200))
+                y_h = np.append(y_h, np.random.normal(86, 5, 400))
+                # Food zone crowd density
+                x_h = np.append(x_h, np.random.normal(18, 5, 200))
+                y_h = np.append(y_h, np.random.normal(55, 5, 200))
 
-                # 빨간 테두리 내부(12~88)로 클리핑 제한
-                x_h = np.clip(x_h, 12, 88)
-                y_h = np.clip(y_h, 12, 88)
+                x_h = np.clip(x_h, 2, 98)
+                y_h = np.clip(y_h, 2, 98)
 
                 fig_map.add_trace(go.Histogram2dContour(
                     x=x_h, y=y_h,
@@ -509,50 +515,96 @@ elif st.session_state.page == "dashboard":
                     line=dict(width=0)
                 ))
 
-            # 5. Archisketch Zone Rectangles & Labels (빨간색 테두리 내 제한)
+            # 4. Movement Flow Arrows (Walkway circulation route)
+            if st.session_state.show_flow_arrows:
+                flow_points = [
+                    (50, 14, 50, 24), # Entrance inwards
+                    (50, 24, 28, 36), # Branch left to booths
+                    (28, 36, 28, 68), # Food/booth corridor north
+                    (28, 68, 40, 78), # Towards main stage
+                    (50, 24, 72, 36), # Branch right to restrooms/first aid
+                    (72, 36, 72, 68), # East corridor north
+                ]
+                for ax_x, ax_y, to_x, to_y in flow_points:
+                    fig_map.add_annotation(
+                        x=to_x, y=to_y, ax=ax_x, ay=ax_y,
+                        xref='x', yref='y', axref='x', ayref='y',
+                        showarrow=True, arrowhead=3, arrowsize=1.3,
+                        arrowcolor="#2563eb", arrowwidth=2.5
+                    )
+
+            # 5. Zone Rectangles & Styled Pill Callout Badges (Reference Image Style)
             for zone_k, info in ZONE_DATA.items():
-                x_p = float(np.clip(info["position"][0], 15, 85))
-                y_p = float(np.clip(info["position"][1], 15, 85))
+                x_p = float(np.clip(info["position"][0], 5, 95))
+                y_p = float(np.clip(info["position"][1], 5, 95))
                 w, h = info["size"]
                 is_sel = (st.session_state.selected_zone == zone_k)
 
-                # Draw Archisketch Rect Block
+                # Zone region shape
                 fig_map.add_shape(
                     type="rect",
                     x0=x_p - w/2, y0=y_p - h/2,
                     x1=x_p + w/2, y1=y_p + h/2,
                     fillcolor=info["color"],
-                    opacity=0.85 if is_sel else 0.65,
+                    opacity=0.75 if is_sel else 0.5,
                     line=dict(
-                        color="#ffffff" if not is_sel else "#1e293b",
+                        color="#ffffff" if not is_sel else "#0f172a",
                         width=3 if is_sel else 1.5
                     )
                 )
 
-                # Label on Zone
+                # Vibrant Pill Tag (matching the reference image design)
                 fig_map.add_trace(go.Scatter(
-                    x=[x_p],
-                    y=[y_p],
+                    x=[x_p], y=[y_p],
                     mode="text",
                     name=zone_k,
-                    text=[f"<b>{info['icon']} {zone_k}</b>"],
+                    text=[f"<span style='background-color:{info['color']}; color:white; padding:5px 12px; border-radius:16px; font-weight:bold; font-size:12px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.2);'>{info['icon']} {zone_k}</span>"],
                     textposition="middle center",
-                    textfont=dict(size=12 if is_sel else 11, color="#ffffff"),
                     showlegend=False
                 ))
 
-            # 6. Movement flow arrows (빨간 테두리 내부 제한)
-            if st.session_state.show_flow_arrows:
-                fig_map.add_annotation(x=50, y=22, ax=50, ay=12, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2.5)
-                fig_map.add_annotation(x=30, y=32, ax=50, ay=22, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
-                fig_map.add_annotation(x=28, y=52, ax=25, ay=38, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
-                fig_map.add_annotation(x=42, y=75, ax=32, ay=58, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
+            # 6. Map Legend Overlay Panel (Bottom Left, like reference image)
+            legend_items = [
+                ("🎭 메인무대", "#3b82f6"),
+                ("🍔 푸드존", "#f97316"),
+                ("🎪 체험부스", "#8b5cf6"),
+                ("🌲 휴식공간", "#10b981"),
+                ("🏥 응급의료센터", "#ef4444"),
+                ("ℹ️ 안내센터", "#ec4899"),
+                ("🚻 화장실", "#06b6d4"),
+                ("🚪 출입구", "#1e293b"),
+                ("➡ 이동 동선", "#2563eb")
+            ]
+            
+            # Draw semi-transparent legend card box on bottom left
+            fig_map.add_shape(
+                type="rect",
+                x0=2, y0=2, x1=24, y1=42,
+                fillcolor="#ffffff",
+                opacity=0.92,
+                line=dict(color="#cbd5e1", width=1.5)
+            )
+            
+            # Legend title & text items
+            legend_text = "<b style='font-size:12px; color:#0f172a;'>📌 행사장 안내 범례</b><br><hr style='margin:3px 0; border:0.5px solid #e2e8f0;'>"
+            for label, color in legend_items:
+                legend_text += f"<span style='font-size:10px; color:{color}; font-weight:600;'>●</span> <span style='font-size:10px; color:#334155;'>{label}</span><br>"
+
+            fig_map.add_annotation(
+                x=3, y=40,
+                text=legend_text,
+                showarrow=False,
+                align="left",
+                xanchor="left",
+                yanchor="top",
+                font=dict(size=10)
+            )
 
             fig_map.update_layout(
-                xaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=True if st.session_state.show_grid_lines else False, gridcolor="#cbd5e1"),
-                yaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=True if st.session_state.show_grid_lines else False, gridcolor="#cbd5e1"),
-                height=480,
-                margin=dict(l=10, r=10, t=10, b=10),
+                xaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#e2e8f0"),
+                yaxis=dict(range=[0, 100], showgrid=st.session_state.show_grid_lines, zeroline=False, visible=st.session_state.show_grid_lines, gridcolor="#e2e8f0"),
+                height=520,
+                margin=dict(l=5, r=5, t=5, b=5),
                 paper_bgcolor="#ffffff",
                 plot_bgcolor="#f8fafc",
                 showlegend=False
@@ -561,7 +613,7 @@ elif st.session_state.page == "dashboard":
             st.plotly_chart(fig_map, use_container_width=True)
 
             if st.session_state.show_heatmap_overlay:
-                st.markdown("<div style='text-align:center; font-size:12px; color:#64748b; margin-top:-10px;'>🔴 <b>빨간색 테두리 전용 허가 구역 적용됨</b> | 🟢 원활 &nbsp; 🟡 보통 &nbsp; 🟠 주의 &nbsp; 🔴 매우 혼잡</div>", unsafe_allow_html=True)
+                st.markdown("<div style='text-align:center; font-size:12px; color:#64748b; margin-top:-10px;'>🟢 원활 &nbsp; 🟡 보통 &nbsp; 🟠 주의 &nbsp; 🔴 매우 혼잡</div>", unsafe_allow_html=True)
 
         with col_side_eval:
             st.markdown("#### 💡 AI 도면 평가 결과")
@@ -576,16 +628,16 @@ elif st.session_state.page == "dashboard":
 
             st.markdown("#### 🛠️ Archisketch 선택 구역 위치 조율")
             sel_zone = st.session_state.selected_zone
-            st.markdown(f"**선택된 구역:** `{sel_zone}` *(🔴 빨간 테두리 내부 범위)*")
+            st.markdown(f"**선택된 구역:** `{sel_zone}`")
 
-            # 위치 조율 슬라이더를 빨간 테두리 내부(15m ~ 85m) 범위로 엄격히 제한
+            # 위치 조율 슬라이더 (전체 도면 범위 0~100%)
             col_pos_x, col_pos_y = st.columns(2)
             with col_pos_x:
-                curr_x = int(np.clip(ZONE_DATA[sel_zone]["position"][0], 15, 85))
-                new_x = st.slider("X 좌표 (빨간 테두리 내)", 15, 85, curr_x)
+                curr_x = int(np.clip(ZONE_DATA[sel_zone]["position"][0], 5, 95))
+                new_x = st.slider("X 좌표 (%)", 5, 95, curr_x)
             with col_pos_y:
-                curr_y = int(np.clip(ZONE_DATA[sel_zone]["position"][1], 15, 85))
-                new_y = st.slider("Y 좌표 (빨간 테두리 내)", 15, 85, curr_y)
+                curr_y = int(np.clip(ZONE_DATA[sel_zone]["position"][1], 5, 95))
+                new_y = st.slider("Y 좌표 (%)", 5, 95, curr_y)
 
             if new_x != ZONE_DATA[sel_zone]["position"][0] or new_y != ZONE_DATA[sel_zone]["position"][1]:
                 ZONE_DATA[sel_zone]["position"] = [new_x, new_y]
