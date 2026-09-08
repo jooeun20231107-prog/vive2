@@ -125,6 +125,8 @@ if "show_grid_lines" not in st.session_state:
     st.session_state.show_grid_lines = True
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "2D CAD 도면"
+if "venue_image" not in st.session_state:
+    st.session_state.venue_image = None
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
@@ -432,38 +434,66 @@ elif st.session_state.page == "dashboard":
         col_main_map, col_side_eval = st.columns([7, 5])
 
         with col_main_map:
-            st.markdown("#### 🗺️ Archisketch 행사 도면 (혼잡도 오버레이 통합 뷰)")
+            st.markdown("#### 🗺️ Archisketch 행사 도면 (🔴 빨간색 테두리 전용 영역 배치)")
+
+            # 파일 업로드 (업로드한 도면/사진이 빨간색 테두리 안쪽에 맞춤 적용됨)
+            uploaded_map_img = st.file_uploader("🖼️ 배경 행사 도면 사진 업로드 (빨간색 테두리 안쪽에 자동 적용)", type=["png", "jpg", "jpeg"], key="map_img_uploader")
 
             fig_map = go.Figure()
 
-            # 1. Base Ground Map / Layout Background
+            # 1. 외곽 바깥 영역 (비사용 구역)
             fig_map.add_shape(
                 type="rect", x0=0, y0=0, x1=100, y1=100,
-                fillcolor="#f8fafc" if not st.session_state.show_grid_lines else "#f1f5f9",
-                line=dict(color="#cbd5e1", width=2)
+                fillcolor="#f1f5f9",
+                line=dict(color="#cbd5e1", width=1)
             )
 
-            # Outer boundaries / Walkway path
+            # 2. 🔴 RED BORDER: 행사 허가/사용 지정 구역 (빨간색 테두리)
             fig_map.add_shape(
                 type="rect", x0=10, y0=10, x1=90, y1=90,
-                fillcolor="rgba(0,0,0,0)",
-                line=dict(color="#94a3b8", width=2, dash="dot")
+                fillcolor="#ffffff" if uploaded_map_img is None else "rgba(255,255,255,0.1)",
+                line=dict(color="#ef4444", width=4, dash="solid")
             )
 
-            # 2. Crowd Heatmap Overlay (Rendered directly ON TOP of the floor plan!)
+            # 빨간색 테두리 라벨
+            fig_map.add_annotation(
+                x=50, y=94,
+                text="<b>🔴 행사 지정 허가 구역 (빨간색 테두리 안쪽 영역만 사용)</b>",
+                showarrow=False,
+                font=dict(color="#ef4444", size=13)
+            )
+
+            # 3. 업로드한 사진을 빨간색 테두리 안쪽(x: 10~90, y: 10~90)에 맞춰 배치
+            if uploaded_map_img is not None:
+                import base64
+                encoded_img = base64.b64encode(uploaded_map_img.read()).decode("utf-8")
+                img_data_url = f"data:image/png;base64,{encoded_img}"
+                fig_map.add_layout_image(
+                    dict(
+                        source=img_data_url,
+                        xref="x", yref="y",
+                        x=10, y=90,
+                        sizex=80, sizey=80,
+                        sizing="stretch",
+                        opacity=0.85,
+                        layer="below"
+                    )
+                )
+
+            # 4. Crowd Heatmap Overlay (빨간색 테두리 안쪽 영역에 제한)
             if st.session_state.show_heatmap_overlay:
                 np.random.seed(42)
-                x_h = np.random.uniform(10, 90, 200)
-                y_h = np.random.uniform(10, 90, 200)
-                # Cluster around Main Stage (50, 82)
-                x_h = np.append(x_h, np.random.normal(50, 12, 400))
-                y_h = np.append(y_h, np.random.normal(80, 8, 400))
-                # Cluster around Food Zone (25, 52)
-                x_h = np.append(x_h, np.random.normal(25, 8, 200))
-                y_h = np.append(y_h, np.random.normal(52, 8, 200))
-                # Cluster around Entrance (50, 10)
-                x_h = np.append(x_h, np.random.normal(50, 8, 200))
-                y_h = np.append(y_h, np.random.normal(12, 6, 200))
+                x_h = np.random.uniform(15, 85, 200)
+                y_h = np.random.uniform(15, 85, 200)
+                # 메인무대 및 주변 밀집 군중
+                x_h = np.append(x_h, np.random.normal(50, 10, 400))
+                y_h = np.append(y_h, np.random.normal(80, 6, 400))
+                x_h = np.append(x_h, np.random.normal(25, 6, 200))
+                y_h = np.append(y_h, np.random.normal(52, 6, 200))
+
+                # 빨간 테두리 내부(12~88)로 클리핑 제한
+                x_h = np.clip(x_h, 12, 88)
+                y_h = np.clip(y_h, 12, 88)
 
                 fig_map.add_trace(go.Histogram2dContour(
                     x=x_h, y=y_h,
@@ -479,9 +509,10 @@ elif st.session_state.page == "dashboard":
                     line=dict(width=0)
                 ))
 
-            # 3. Archisketch Zone Rectangles & Labels
+            # 5. Archisketch Zone Rectangles & Labels (빨간색 테두리 내 제한)
             for zone_k, info in ZONE_DATA.items():
-                x_p, y_p = info["position"]
+                x_p = float(np.clip(info["position"][0], 15, 85))
+                y_p = float(np.clip(info["position"][1], 15, 85))
                 w, h = info["size"]
                 is_sel = (st.session_state.selected_zone == zone_k)
 
@@ -510,10 +541,10 @@ elif st.session_state.page == "dashboard":
                     showlegend=False
                 ))
 
-            # 4. Movement flow arrows
+            # 6. Movement flow arrows (빨간 테두리 내부 제한)
             if st.session_state.show_flow_arrows:
-                fig_map.add_annotation(x=50, y=16, ax=50, ay=6, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2.5)
-                fig_map.add_annotation(x=30, y=32, ax=50, ay=18, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
+                fig_map.add_annotation(x=50, y=22, ax=50, ay=12, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2.5)
+                fig_map.add_annotation(x=30, y=32, ax=50, ay=22, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
                 fig_map.add_annotation(x=28, y=52, ax=25, ay=38, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
                 fig_map.add_annotation(x=42, y=75, ax=32, ay=58, xref='x', yref='y', axref='x', ayref='y', showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor="#2563eb", arrowwidth=2)
 
@@ -530,7 +561,7 @@ elif st.session_state.page == "dashboard":
             st.plotly_chart(fig_map, use_container_width=True)
 
             if st.session_state.show_heatmap_overlay:
-                st.markdown("<div style='text-align:center; font-size:12px; color:#64748b; margin-top:-10px;'>🟢 원활 (Low) &nbsp; 🟡 보통 (Medium) &nbsp; 🟠 주의 (High) &nbsp; 🔴 매우 혼잡 (Critical)</div>", unsafe_allow_html=True)
+                st.markdown("<div style='text-align:center; font-size:12px; color:#64748b; margin-top:-10px;'>🔴 <b>빨간색 테두리 전용 허가 구역 적용됨</b> | 🟢 원활 &nbsp; 🟡 보통 &nbsp; 🟠 주의 &nbsp; 🔴 매우 혼잡</div>", unsafe_allow_html=True)
 
         with col_side_eval:
             st.markdown("#### 💡 AI 도면 평가 결과")
@@ -545,14 +576,16 @@ elif st.session_state.page == "dashboard":
 
             st.markdown("#### 🛠️ Archisketch 선택 구역 위치 조율")
             sel_zone = st.session_state.selected_zone
-            st.markdown(f"**선택된 구역:** `{sel_zone}`")
+            st.markdown(f"**선택된 구역:** `{sel_zone}` *(🔴 빨간 테두리 내부 범위)*")
 
-            # Archisketch interactive position modifier sliders
+            # 위치 조율 슬라이더를 빨간 테두리 내부(15m ~ 85m) 범위로 엄격히 제한
             col_pos_x, col_pos_y = st.columns(2)
             with col_pos_x:
-                new_x = st.slider("X 좌표 위치 (m)", 5, 95, ZONE_DATA[sel_zone]["position"][0])
+                curr_x = int(np.clip(ZONE_DATA[sel_zone]["position"][0], 15, 85))
+                new_x = st.slider("X 좌표 (빨간 테두리 내)", 15, 85, curr_x)
             with col_pos_y:
-                new_y = st.slider("Y 좌표 위치 (m)", 5, 95, ZONE_DATA[sel_zone]["position"][1])
+                curr_y = int(np.clip(ZONE_DATA[sel_zone]["position"][1], 15, 85))
+                new_y = st.slider("Y 좌표 (빨간 테두리 내)", 15, 85, curr_y)
 
             if new_x != ZONE_DATA[sel_zone]["position"][0] or new_y != ZONE_DATA[sel_zone]["position"][1]:
                 ZONE_DATA[sel_zone]["position"] = [new_x, new_y]
