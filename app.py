@@ -4,6 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
+# Streamlit page setup
 st.set_page_config(
     page_title="이벤트 아키텍트 AI - AI 기반 행사 자동 설계 플랫폼",
     page_icon="🎪",
@@ -125,18 +126,26 @@ DEFAULT_FACILITIES = {
 
 if 'page' not in st.session_state:
     st.session_state['page'] = 'dashboard'
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = True
+if 'username' not in st.session_state:
+    st.session_state['username'] = "주은님"
+if 'digital_twin_generated' not in st.session_state:
+    st.session_state['digital_twin_generated'] = True
+if 'simulated' not in st.session_state:
+    st.session_state['simulated'] = False
 if 'selected_facility' not in st.session_state:
     st.session_state['selected_facility'] = 'stage'
 if 'facilities' not in st.session_state:
     st.session_state['facilities'] = {k: v.copy() for k, v in DEFAULT_FACILITIES.items()}
 if 'event_name' not in st.session_state:
-    st.session_state['event_name'] = "2026 야외 뮤직 & 푸드 페스티벌"
+    st.session_state['event_name'] = "2026 청춘 페스티벌"
 if 'expected_visitors' not in st.session_state:
     st.session_state['expected_visitors'] = 5000
 if 'budget' not in st.session_state:
     st.session_state['budget'] = "5,000만원"
 if 'location' not in st.session_state:
-    st.session_state['location'] = "서울 수변 야외 공원 광장"
+    st.session_state['location'] = "서울 올림픽공원 잔디마당"
 if 'chat_messages' not in st.session_state:
     st.session_state['chat_messages'] = [
         {"role": "assistant", "content": "안녕하세요! AI 행사 공간 설계 도우미입니다. 시설물을 클릭하시거나 명령어(예: '푸드존을 외곽으로 이동해줘')를 입력해 보세요."}
@@ -147,7 +156,7 @@ def parse_and_apply_ai_command(prompt: str):
     facs = st.session_state['facilities']
     
     target_key = None
-    if "푸드" in prompt_clean or "음식" in prompt_clean:
+    if "푸드" in prompt_clean or "음식" in prompt_clean or "먹거리" in prompt_clean:
         target_key = "food"
     elif "화장실" in prompt_clean:
         target_key = "toilet"
@@ -161,7 +170,7 @@ def parse_and_apply_ai_command(prompt: str):
         target_key = "rest"
     elif "안내" in prompt_clean:
         target_key = "info"
-    elif "출입구" in prompt_clean or "입구" in prompt_clean:
+    elif "출입구" in prompt_clean or "입구" in prompt_clean or "비상구" in prompt_clean:
         target_key = "exit"
 
     if not target_key:
@@ -173,7 +182,8 @@ def parse_and_apply_ai_command(prompt: str):
     if "외곽" in prompt_clean or "멀리" in prompt_clean or "분리" in prompt_clean:
         if target_key == "food":
             fac["x"] = 150
-            action_desc = "푸드존을 조리 연기 차단을 위해 서쪽 외곽 구역으로 이동시켰습니다."
+            fac["y"] = 420
+            action_desc = "푸드존을 조리 연기 차단 및 혼잡 분리를 위해 서쪽 외곽 구역으로 이동시켰습니다."
         else:
             fac["x"] = max(120, fac["x"] - 100)
             action_desc = f"{fac['name']}을(를) 외곽으로 이동 조정했습니다."
@@ -183,6 +193,16 @@ def parse_and_apply_ai_command(prompt: str):
     elif "남쪽" in prompt_clean or "아래" in prompt_clean:
         fac["y"] = min(620, fac["y"] + 80)
         action_desc = f"{fac['name']} 좌표를 남쪽 방향으로 하향 이동했습니다."
+    elif "동쪽" in prompt_clean or "오른쪽" in prompt_clean:
+        fac["x"] = min(880, fac["x"] + 100)
+        action_desc = f"{fac['name']} 좌표를 동쪽 방향으로 이동했습니다."
+    elif "서쪽" in prompt_clean or "왼쪽" in prompt_clean:
+        fac["x"] = max(120, fac["x"] - 100)
+        action_desc = f"{fac['name']} 좌표를 서쪽 방향으로 이동했습니다."
+    elif "의료" in prompt_clean or "병원" in prompt_clean or "가까이" in prompt_clean or "근처" in prompt_clean:
+        fac["x"] = facs["medical"]["x"] - 40
+        fac["y"] = facs["medical"]["y"] + 110
+        action_desc = f"{fac['name']}을(를) 응급의료센터 인근의 접근성이 우수한 위치로 조정했습니다."
     elif "초기화" in prompt_clean or "원래" in prompt_clean or "최적" in prompt_clean:
         fac["x"] = DEFAULT_FACILITIES[target_key]["x"]
         fac["y"] = DEFAULT_FACILITIES[target_key]["y"]
@@ -203,7 +223,11 @@ with st.sidebar:
     st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
     st.divider()
 
-    page_choice = st.radio("메뉴 이동", ["🚀 공간 배치 대시보드", "🏠 소개 메인", "📄 AI 기안 보고서"])
+    page_choice = st.radio(
+        "메뉴 이동",
+        ["🚀 공간 배치 대시보드", "🏠 소개 메인", "📄 AI 기안 보고서"],
+        index=0 if st.session_state['page'] == 'dashboard' else (1 if st.session_state['page'] == 'home' else 2)
+    )
     if "소개" in page_choice:
         st.session_state['page'] = 'home'
     elif "대시보드" in page_choice:
@@ -310,7 +334,7 @@ elif st.session_state['page'] == "dashboard":
             height=530,
             margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor="#FFFFFF",
-            plot_bgcolor="#FAFFA8",
+            plot_bgcolor="#FAFAFA",
             clickmode="event+select"
         )
 
@@ -368,6 +392,8 @@ elif st.session_state['page'] == "dashboard":
 elif st.session_state['page'] == "report":
     st.markdown("## 📄 AI 결재용 보고서")
     
+    facs = st.session_state['facilities']
+
     st.markdown(f"""
     <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:30px; max-width:800px; margin:0 auto; color:#0F172A;">
         <div style="display:flex; justify-content:space-between; border-bottom:2px solid #0F172A; padding-bottom:12px; margin-bottom:20px;">
@@ -380,16 +406,49 @@ elif st.session_state['page'] == "report":
 
         <p><b>1. 행사 개요</b></p>
         <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:14px;">
-            <tr><td style="padding:6px; border:1px solid #E2E8F0; background:#F8FAFC; width:25%;"><b>행사명</b></td><td style="padding:6px; border:1px solid #E2E8F0;">{st.session_state['event_name']}</td></tr>
-            <tr><td style="padding:6px; border:1px solid #E2E8F0; background:#F8FAFC;"><b>예상 관람객</b></td><td style="padding:6px; border:1px solid #E2E8F0;">{st.session_state['expected_visitors']:,} 명</td></tr>
-            <tr><td style="padding:6px; border:1px solid #E2E8F0; background:#F8FAFC;"><b>예산 / 장소</b></td><td style="padding:6px; border:1px solid #E2E8F0;">{st.session_state['budget']} / {st.session_state['location']}</td></tr>
+            <tr><td style="padding:8px; border:1px solid #E2E8F0; background:#F8FAFC; width:25%;"><b>행사명</b></td><td style="padding:8px; border:1px solid #E2E8F0;">{st.session_state['event_name']}</td></tr>
+            <tr><td style="padding:8px; border:1px solid #E2E8F0; background:#F8FAFC;"><b>예상 관람객</b></td><td style="padding:8px; border:1px solid #E2E8F0;">{st.session_state['expected_visitors']:,} 명</td></tr>
+            <tr><td style="padding:8px; border:1px solid #E2E8F0; background:#F8FAFC;"><b>예산 / 장소</b></td><td style="padding:8px; border:1px solid #E2E8F0;">{st.session_state['budget']} / {st.session_state['location']}</td></tr>
         </table>
 
-        <p><b>2. AI 배치 종합 평가</b></p>
-        <ul style="font-size:14px; line-height:1.6; color:#334155;">
-            <li><b>시야각 및 음향:</b> 메인 무대를 북측 상단에 위치시켜 관람 시야 확보.</li>
-            <li><b>피난 및 응급:</b> 응급의료센터를 비상 도로에 접하도록 동측에 배치.</li>
-            <li><b>위생 및 동선:</b> 푸드존과 화장실을 관람객 동선과 간섭되지 않도록 외곽 조절.</li>
+        <p><b>2. AI 공간 안전 및 동선 실시간 평가</b></p>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px;">
+            <thead>
+                <tr style="background:#F1F5F9; text-align:left;">
+                    <th style="padding:8px; border:1px solid #CBD5E1;">평가 항목</th>
+                    <th style="padding:8px; border:1px solid #CBD5E1;">점수</th>
+                    <th style="padding:8px; border:1px solid #CBD5E1;">등급</th>
+                    <th style="padding:8px; border:1px solid #CBD5E1;">검토 및 평가 내용</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">안전성 및 비상 피난 코스</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">95점</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;"><span class="badge badge-excellent">매우 우수</span></td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">응급의료센터({facs['medical']['x']}, {facs['medical']['y']})가 비상 출입구와 접해 빠른 대응 가능.</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">관람 동선 분리성</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">92점</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;"><span class="badge badge-excellent">매우 우수</span></td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">푸드존과 무대 관람석 간 연기 및 혼잡 간섭을 차단함.</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">서비스 및 편의 접근성</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">88점</td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;"><span class="badge badge-good">우수</span></td>
+                    <td style="padding:8px; border:1px solid #E2E8F0;">화장실 및 종합안내소가 주 출입 경로 주변에 균형 있게 배치됨.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><b>3. 주요 시설물 최적 배치 사유 요약</b></p>
+        <ul style="font-size:13px; line-height:1.6; color:#334155;">
+            <li><b>{facs['stage']['name']}:</b> {facs['stage']['reason']}</li>
+            <li><b>{facs['food']['name']}:</b> {facs['food']['reason']}</li>
+            <li><b>{facs['medical']['name']}:</b> {facs['medical']['reason']}</li>
+            <li><b>{facs['toilet']['name']}:</b> {facs['toilet']['reason']}</li>
         </ul>
 
         <div style="margin-top:30px; text-align:center; font-size:13px; color:#64748B;">
