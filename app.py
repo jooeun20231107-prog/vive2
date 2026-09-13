@@ -121,6 +121,9 @@ if "show_grid_lines" not in st.session_state:
 if "crowd_seed" not in st.session_state:
     st.session_state.crowd_seed = 42
 
+if "design_generated" not in st.session_state:
+    st.session_state.design_generated = False
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {"role": "assistant", "content": "안녕하세요! **이벤트 아키텍트 AI CAD Studio**입니다. 도면 상의 시설물을 선택하거나 '무대를 북쪽으로 5m 이동'과 같이 수정 요청해 보세요!"}
@@ -305,6 +308,7 @@ elif st.session_state.page == "dashboard":
                 st.session_state.budget = budget_input
                 st.session_state.duration = duration_input
                 st.session_state.event_purpose = event_purpose_input
+                st.session_state.design_generated = True
                 st.success("✨ 공간 배경 및 시설 배치가 AI 알고리즘으로 최적화되었습니다!")
                 st.rerun()
 
