@@ -164,7 +164,7 @@ if 'digital_twin_generated' not in st.session_state:
 if 'selected_facility' not in st.session_state:
     st.session_state['selected_facility'] = 'stage'
 if 'facilities' not in st.session_state:
-    st.session_state['facilities'] = {k: v.copy() for k, v in OPTIMAL_FACILITIES_PRESETS.items()} if 'OPTIMAL_FACILITIES_PRESETS' in globals() else {k: v.copy() for k, v in OPTIMAL_FACILITY_PRESETS.items()}
+    st.session_state['facilities'] = {k: v.copy() for k, v in OPTIMAL_FACILITY_PRESETS.items()}
 if 'view_mode' not in st.session_state:
     st.session_state['view_mode'] = "2D CAD 도면"
 if 'venue_bg_type' not in st.session_state:
