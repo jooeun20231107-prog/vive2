@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의 (사이드바 위/아래 완전 분리 레이아웃)
+# 커스텀 스타일 정의 (사이드바 위/아래 완전 분리 및 넓은 여백 확보)
 st.markdown("""
     <style>
     /* 전체 배경 및 폰트 */
@@ -65,55 +65,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-    }
-    
-    /* 카드 컨테이너 스타일 */
-    .custom-card {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        border: 1px solid #E2E8F0;
-        margin-bottom: 20px;
-    }
-
-    /* 뱃지 및 태그 디자인 */
-    .badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
-    .badge-excellent { background-color: #DCFCE7; color: #15803D; }
-    .badge-good { background-color: #DBEAFE; color: #1E40AF; }
-    .badge-warning { background-color: #FEF3C7; color: #B45309; }
-
-    /* AI 요약 박스 */
-    .reason-box {
-        background-color: #F0F9FF;
-        border-left: 4px solid #0284C7;
-        padding: 16px;
-        border-radius: 12px;
-        margin-top: 10px;
-        color: #0F172A;
-    }
-
-    /* Streamlit 버튼 커스텀 */
-    .stButton>button {
-        border-radius: 10px;
-        font-weight: 600;
-    }
-
-    /* 사이드바 flex 배치: 상단과 하단을 양 끝으로 완벽 분리 및 중간 여백 확보 */
-    [data-testid="stSidebar"] > div:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 88vh;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # 세션 상태 초기화
 if 'page' not in st.session_state:
@@ -125,7 +76,7 @@ if 'username' not in st.session_state:
 
 # 사이드바 구성
 with st.sidebar:
-    # --- [상단 영역] 이벤트 온 로고, 설명, 구분선 ---
+    # --- [상단 영역] 이벤트 온 로고 및 구분선 ---
     with st.container():
         if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
             st.session_state['page'] = 'home'
