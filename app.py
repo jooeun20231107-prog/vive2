@@ -66,7 +66,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = "주은님"
 
-# 사이드바 구성
+# 사이드바 구성 (위치 조정을 위한 여백 추가)
 with st.sidebar:
     if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
         st.session_state['page'] = 'home'
@@ -74,6 +74,9 @@ with st.sidebar:
 
     st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
     st.divider()
+
+    # 상단 메뉴 영역과 사용자 프로필 간격 확보
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
 
     if st.session_state['logged_in']:
         st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
@@ -866,4 +869,3 @@ elif st.session_state['page'] == 'settings':
         st.session_state['logged_in'] = False
         st.session_state['page'] = 'home'
         st.rerun()
-        
