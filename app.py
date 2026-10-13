@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의
+# 커스텀 스타일 정의 (사이드바 플렉스박스 정렬 적용)
 st.markdown("""
     <style>
     /* 전체 배경 및 폰트 */
@@ -55,6 +55,17 @@ st.markdown("""
         border-radius: 10px;
         font-weight: 600;
     }
+
+    /* 사이드바 하단 고정 스타일 */
+    [data-testid="stSidebar"] > div:first-child {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .sidebar-bottom-section {
+        margin-top: auto;
+        padding-bottom: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -66,7 +77,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = "주은님"
 
-# 사이드바 구성 (위치 조정을 위한 여백 추가)
+# 사이드바 구성 (맨 아래로 고정)
 with st.sidebar:
     if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
         st.session_state['page'] = 'home'
@@ -75,14 +86,14 @@ with st.sidebar:
     st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
     st.divider()
 
-    # 상단 메뉴 영역과 사용자 프로필 간격 확보
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-
+    # 하단 영역으로 밀어내는 컨테이너 시작
+    st.markdown('<div class="sidebar-bottom-section">', unsafe_allow_html=True)
     if st.session_state['logged_in']:
         st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
         if st.button("로그아웃", key="sidebar_logout", use_container_width=True):
             st.session_state['logged_in'] = False
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # 상단 헤더 영역
 top_col1, top_col2 = st.columns([3, 1])
