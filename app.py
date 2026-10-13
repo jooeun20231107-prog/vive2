@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의 (사이드바 내부 flex 활용하여 맨 아래로 강제 고정)
+# 커스텀 스타일 정의 (사이드바 하단 고정 구조 적용)
 st.markdown("""
     <style>
     /* 전체 배경 및 폰트 */
@@ -56,20 +56,22 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* 사이드바 레이아웃 강제 고정 (맨 아래로 배치) */
-    section[data-testid="stSidebar"] {
+    /* 사이드바 맨 아래 고정 레이아웃 */
+    [data-testid="stSidebar"] {
+        background-color: #F8FAFC;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+    }
+    .sidebar-top-content {
         display: flex;
         flex-direction: column;
     }
-    section[data-testid="stSidebar"] > div:first-child {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    /* 사이드바 하단 컨테이너 */
-    .sidebar-bottom {
-        margin-top: auto !important;
-        padding-bottom: 20px;
+    .sidebar-bottom-content {
+        margin-bottom: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -82,17 +84,19 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = "주은님"
 
-# 사이드바 구성 (맨 아래 고정)
+# 사이드바 구성 (상단과 하단 영역 완벽 분리)
 with st.sidebar:
+    st.markdown('<div class="sidebar-top-content">', unsafe_allow_html=True)
     if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
         st.session_state['page'] = 'home'
         st.rerun()
 
     st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
     st.divider()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # 빈 공간을 채워 프로필과 로그아웃 버튼을 맨 아래로 밀어냄
-    st.markdown('<div class="sidebar-bottom">', unsafe_allow_html=True)
+    # 하단 영역 (무조건 맨 밑으로 고정)
+    st.markdown('<div class="sidebar-bottom-content">', unsafe_allow_html=True)
     if st.session_state['logged_in']:
         st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
         if st.button("로그아웃", key="sidebar_logout", use_container_width=True):
