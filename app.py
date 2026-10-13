@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+import streamlit as st
+
+st.set_page_config(
+    page_title="이벤트 온 (Event On) - AI 기반 행사 자동 설계 플랫폼",
+    page_icon="🎪",
+    layout="wide"
+)
+
+# HTML / JS / CSS 전체 코드를 담은 템플릿 (이모지 유니코드 이스케이프 처리로 파이썬 문법 에러 원천 차단)
+HTML_CONTENT = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -22,13 +33,13 @@
   <!-- 네비게이션 바 -->
   <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
-      <span class="text-2xl">🎪</span>
-      <h1 class="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">이벤트 온 (Event On)</h1>
+      <span class="text-2xl">&#127915;</span>
+      <h1 class="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">&#이벤트 온 (Event On)</h1>
       <span class="text-xs bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full font-bold">AI Digital Twin Platform</span>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="goHome()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-bold rounded-lg transition">🏠 홈으로</button>
-      <button onclick="openWorkflowModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-bold rounded-lg transition">⚙️ AI 설계 프로세스</button>
+      <button onclick="goHome()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-bold rounded-lg transition">&#127968; 홈으로</button>
+      <button onclick="openWorkflowModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-bold rounded-lg transition">&#9881;&#65039; AI 설계 프로세스</button>
     </div>
   </header>
 
@@ -43,7 +54,7 @@
       </div>
 
       <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 md:p-8 shadow-xl max-w-3xl mx-auto">
-        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">✨ 행사장 기본 정보 입력</h3>
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">&#10024; 행사장 기본 정보 입력</h3>
         <form id="designForm" onsubmit="startDesign(event)" class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label class="block text-xs font-bold text-slate-400 mb-2">행사명</label>
@@ -68,14 +79,14 @@
           <div>
             <label class="block text-xs font-bold text-slate-400 mb-2">원하는 분위기</label>
             <select id="evVibe" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
-              <option value="healing">🌿 힐링 및 자연 친화적</option>
-              <option value="dynamic">🔥 활기찬 축제 및 공연 중심</option>
-              <option value="tech">💡 스마트 테크 및 체험 중심</option>
+              <option value="healing">&#127807; 힐링 및 자연 친화적</option>
+              <option value="dynamic">&#128293; 활기찬 축제 및 공연 중심</option>
+              <option value="tech">&#128161; 스마트 테크 및 체험 중심</option>
             </select>
           </div>
           <div class="md:col-span-2 pt-4">
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition text-base">
-              🚀 AI 디지털 트윈 행사장 자동 설계 시작하기
+              &#128640; AI 디지털 트윈 행사장 자동 설계 시작하기
             </button>
           </div>
         </form>
@@ -86,22 +97,22 @@
     <div id="screen-workspace" class="screen space-y-6">
       <!-- 상단 컨트롤 바 -->
       <div class="flex flex-wrap gap-2 items-center bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-        <button id="bMode" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg" onclick="setMode('after')">✦ AI 최적 배치</button>
+        <button id="bMode" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg" onclick="setMode('after')">&#10022; AI 최적 배치</button>
         <button id="bModeB" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="setMode('before')">설계 전(기존) 배치</button>
         <div class="h-5 w-[1px] bg-slate-700 mx-1"></div>
-        <button id="b3d" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg" onclick="setView(true)">🧊 3D 입체 설계도</button>
-        <button id="b2d" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="setView(false)">🗺️ 2D 평면도</button>
-        <button id="bHeat3" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="togHeat3()">🔥 히트맵 겹치기</button>
+        <button id="b3d" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg" onclick="setView(true)">&#129482;&#127995; 3D 입체 설계도</button>
+        <button id="b2d" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="setView(false)">&#128506;&#65039; 2D 평면도</button>
+        <button id="bHeat3" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="togHeat3()">&#128293; 히트맵 겹치기</button>
         <div class="flex-1"></div>
-        <button id="bPlay" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="togSim()">⏸ 시뮬레이션 정지</button>
-        <button id="bRain" class="px-3 py-2 bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-lg" onclick="togRain()">🌧️ 우천</button>
-        <button id="bEmg" class="px-3 py-2 bg-red-600/30 text-red-300 border border-red-500/40 text-xs font-bold rounded-lg" onclick="togEmg()">🚨 응급환자 발생</button>
+        <button id="bPlay" class="px-3 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg" onclick="togSim()">&#9208; 시뮬레이션 정지</button>
+        <button id="bRain" class="px-3 py-2 bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-lg" onclick="togRain()">&#127783;&#65039; 우천</button>
+        <button id="bEmg" class="px-3 py-2 bg-red-600/30 text-red-300 border border-red-500/40 text-xs font-bold rounded-lg" onclick="togEmg()">&#128680; 응급환자 발생</button>
       </div>
 
       <!-- 타임라인 -->
       <div class="flex items-center gap-4 bg-slate-800/60 border border-slate-700 p-3 rounded-xl text-xs font-bold">
-        <span>⏰ 시간대</span>
-        <button id="bTl" onclick="togTl()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg">▶ 재생</button>
+        <span>&#9232; 시간대</span>
+        <button id="bTl" onclick="togTl()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg">&#9654; 재생</button>
         <input type="range" id="tSl" min="10" max="20" step="1" value="14" oninput="setTime(+this.value)" class="flex-1 accent-blue-500">
         <span class="bg-blue-600 text-white px-3 py-1 rounded-full" id="tTxt">14:00</span>
         <span id="tDesc" class="text-slate-400 font-medium"></span>
@@ -111,7 +122,7 @@
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
         <div class="flex justify-between items-center mb-3">
           <h4 class="text-sm font-bold flex items-center gap-2">
-            <span>🗺️ 행사장 디지털 트윈</span>
+            <span>&#128506;&#65039; 행사장 디지털 트윈</span>
             <span id="verTxt" class="text-slate-400 font-normal"></span>
           </h4>
           <div class="flex gap-2">
@@ -129,12 +140,11 @@
         </div>
       </div>
 
-      <!-- 하단 그리드 (부스 추가 및 통계) -->
+      <!-- 하단 그리드 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 커스텀 부스 추가 -->
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl space-y-4">
           <h4 class="text-sm font-bold flex items-center justify-between">
-            <span>➕ 맞춤형 부스/시설 추가</span>
+            <span>&#10133; 맞춤형 부스/시설 추가</span>
             <span class="text-xs text-slate-400">사용자 정의 구역</span>
           </h4>
           <div class="space-y-3">
@@ -153,16 +163,15 @@
               </div>
               <div>
                 <label class="block text-xs text-slate-400 mb-1">아이콘 (이모지)</label>
-                <input type="text" id="customBoothIcon" value="🤖" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-center focus:outline-none focus:border-blue-500">
+                <input type="text" id="customBoothIcon" value="&#129302;" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-center focus:outline-none focus:border-blue-500">
               </div>
             </div>
             <button onclick="addCustomBooth()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">디지털 트윈에 부스 배치하기</button>
           </div>
         </div>
 
-        <!-- 실시간 상태 및 배치 구역 리스트 -->
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl space-y-4">
-          <h4 class="text-sm font-bold">📊 AI 분석 리포트 & 구역 현황</h4>
+          <h4 class="text-sm font-bold">&#128202; AI 분석 리포트 & 구역 현황</h4>
           <div class="grid grid-cols-2 gap-3">
             <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl text-xs text-slate-400 font-semibold">
               현재 최대 밀도 <b id="kPeak" class="block text-base text-white mt-1">-</b>
@@ -172,7 +181,7 @@
             </div>
           </div>
           <div>
-            <div class="text-xs font-bold mb-2">📍 배치된 구역 <span id="zCnt" class="text-slate-400"></span></div>
+            <div class="text-xs font-bold mb-2">&#128205; 배치된 구역 <span id="zCnt" class="text-slate-400"></span></div>
             <div id="zlist" class="grid grid-cols-2 gap-2 max-h-32 overflow-auto text-xs font-bold"></div>
           </div>
         </div>
@@ -184,8 +193,8 @@
   <div id="workflowModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-2xl">
       <div class="flex justify-between items-center">
-        <h3 class="text-lg font-extrabold text-blue-400">⚙️ AI 행사 설계 프로세스 (Workflow)</h3>
-        <button onclick="closeWorkflowModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+        <h3 class="text-lg font-extrabold text-blue-400">&#9881;&#65039; AI 행사 설계 프로세스 (Workflow)</h3>
+        <button onclick="closeWorkflowModal()" class="text-slate-400 hover:text-white font-bold text-lg">&#10005;</button>
       </div>
       <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
         <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
@@ -206,7 +215,6 @@
   </div>
 
   <script>
-    // 샘플 데이터 및 시뮬레이션 엔진 설정
     let D = {
       theme: { kind: 'outdoor', ground: '#1e3a2f', groundRain: '#172554', path: '#334155' },
       mpu: 1.5, total: 94.5, before_total: 68.2,
@@ -219,19 +227,19 @@
         { name: '동문 (역 출구)', x: 155, y: 50 }
       ],
       zones: [
-        { name: '메인 공연장', type: 'stage', x: 60, y: 20, w: 40, h: 22, color: '#8b5cf6', icon: '🎤', attract: 90, ht: 4 },
-        { name: '청춘 체험부스', type: 'booth', x: 20, y: 55, w: 35, h: 18, color: '#ec4899', icon: '🎨', attract: 70 },
-        { name: '푸드트럭 존', type: 'food', x: 105, y: 55, w: 35, h: 18, color: '#f59e0b', icon: '🍔', attract: 85 },
-        { name: '힐링 휴게공간', type: 'rest', x: 65, y: 78, w: 30, h: 16, color: '#10b981', icon: '🌳', attract: 40 },
-        { name: '응급의료센터', type: 'medical', x: 10, y: 15, w: 18, h: 14, color: '#ef4444', icon: '🚑', attract: 10 },
-        { name: '종합 안내소', type: 'info', x: 132, y: 15, w: 18, h: 14, color: '#0ea5e9', icon: 'ℹ️', attract: 30 },
-        { name: '화장실', type: 'restroom', x: 73, y: 50, w: 14, h: 12, color: '#06b6d4', icon: '🚻', attract: 50 }
+        { name: '메인 공연장', type: 'stage', x: 60, y: 20, w: 40, h: 22, color: '#8b5cf6', icon: '\ud83c\udfa4', attract: 90, ht: 4 },
+        { name: '청춘 체험부스', type: 'booth', x: 20, y: 55, w: 35, h: 18, color: '#ec4899', icon: '\ud83c\udfa8', attract: 70 },
+        { name: '푸드트럭 존', type: 'food', x: 105, y: 55, w: 35, h: 18, color: '#f59e0b', icon: '\ud83c\udf54', attract: 85 },
+        { name: '힐링 휴게공간', type: 'rest', x: 65, y: 78, w: 30, h: 16, color: '#10b981', icon: '\ud83c\udf33', attract: 40 },
+        { name: '응급의료센터', type: 'medical', x: 10, y: 15, w: 18, h: 14, color: '#ef4444', icon: '\ud83d\ude91', attract: 10 },
+        { name: '종합 안내소', type: 'info', x: 132, y: 15, w: 18, h: 14, color: '#0ea5e9', icon: '\u2139\ufe0f', attract: 30 },
+        { name: '화장실', type: 'restroom', x: 73, y: 50, w: 14, h: 12, color: '#06b6d4', icon: '\', attract: 50 }
       ],
       before_zones: [
-        { name: '메인 공연장', type: 'stage', x: 10, y: 10, w: 35, h: 20, color: '#8b5cf6', icon: '🎤', attract: 90, ht: 4 },
-        { name: '푸드트럭 존', type: 'food', x: 50, y: 10, w: 35, h: 20, color: '#f59e0b', icon: '🍔', attract: 85 },
-        { name: '체험부스', type: 'booth', x: 90, y: 10, w: 35, h: 20, color: '#ec4899', icon: '🎨', attract: 70 },
-        { name: '응급의료센터', type: 'medical', x: 130, y: 70, w: 18, h: 14, color: '#ef4444', icon: '🚑', attract: 10 }
+        { name: '메인 공연장', type: 'stage', x: 10, y: 10, w: 35, h: 20, color: '#8b5cf6', icon: '\ud83c\udfa4', attract: 90, ht: 4 },
+        { name: '푸드트럭 존', type: 'food', x: 50, y: 10, w: 35, h: 20, color: '#f59e0b', icon: '\ud83c\udf54', attract: 85 },
+        { name: '체험부스', type: 'booth', x: 90, y: 10, w: 35, h: 20, color: '#ec4899', icon: '\ud83c\udfa8', attract: 70 },
+        { name: '응급의료센터', type: 'medical', x: 130, y: 70, w: 18, h: 14, color: '#ef4444', icon: '\ud83d\ude91', attract: 10 }
       ]
     };
 
@@ -260,7 +268,7 @@
       const name = $('customBoothName').value.trim();
       if (!name) { alert('부스 이름을 입력해주세요.'); return; }
       const type = $('customBoothType').value;
-      const icon = $('customBoothIcon').value || '📌';
+      const icon = $('customBoothIcon').value || '\ud83d\udccc';
       const colors = { booth: '#ec4899', food: '#f59e0b', rest: '#10b981' };
       
       Z().push({ name, type, x: 65, y: 45, w: 22, h: 14, color: colors[type] || '#3b82f6', icon, attract: 50 });
@@ -271,7 +279,6 @@
       alert(`"${name}" 부스가 행사장 중앙에 성공적으로 배치되었습니다!`);
     }
 
-    // Legend 렌더링
     $('legend').innerHTML =
       [['#8b5cf6','공연장'],['#ec4899','체험부스'],['#f59e0b','푸드존'],['#10b981','휴게공간'],['#ef4444','응급의료'],['#0ea5e9','안내센터'],['#06b6d4','화장실'],['#334155','출입구']]
       .map(a => `<span><i style="background:${a[0]};display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;"></i>${a[1]}</span>`).join('');
@@ -342,9 +349,9 @@
         emg.target = best;
         if (best && bd > 1.5) {
           emg.x += (best.x+best.w/2 - emg.x)/bd * .9; emg.y += (best.y+best.h/2 - emg.y)/bd * .9;
-          $('status').textContent = '🚑 응급 이송 중… 의료센터까지 ' + Math.round(bd * mpu) + 'm';
+          $('status').textContent = '\ud83d\ude91 응급 이송 중… 의료센터까지 ' + Math.round(bd * mpu) + 'm';
         } else if (best) {
-          $('status').textContent = '✅ 의료센터 도착 완료';
+          $('status').textContent = '\u2705 의료센터 도착 완료';
         }
       }
     }
@@ -412,11 +419,10 @@
       });
       if (emg) {
         px.fillStyle = '#ef4444'; px.beginPath(); px.arc(emg.x*S, emg.y*S, 8, 0, 7); px.fill();
-        px.fillStyle = '#fff'; px.font = 'bold 11px Pretendard'; px.textAlign = 'center'; px.fillText('🚑 응급', emg.x*S, emg.y*S - 12);
+        px.fillStyle = '#fff'; px.font = 'bold 11px Pretendard'; px.textAlign = 'center'; px.fillText('\ud83d\ude91 응급', emg.x*S, emg.y*S - 12);
       }
     }
 
-    // 3D Three.js 렌더러
     let R3 = null, S3, C3, G3, bodyM, headM, rainPts, emgGrp, heatPlane, heatTex;
     let yaw = .55, pitch = .72, zoom3 = 1, drag = false, lx = 0, ly = 0;
     const DUM = new THREE.Object3D();
@@ -559,17 +565,17 @@
       $('zCnt').textContent = '(' + Z().length + '개소)';
     }
 
-    function togSim() { sim = !sim; $('bPlay').textContent = sim ? '⏸ 시뮬레이션 정지' : '▶ 시뮬레이션 시작'; }
+    function togSim() { sim = !sim; $('bPlay').textContent = sim ? '\u23f8 시뮬레이션 정지' : '\u25b6 시뮬레이션 시작'; }
     function togRain() { rain = !rain; drawBase(); if (R3) buildScene3(); }
     function togEmg() {
       if (emg) { emg = null; $('status').textContent = '실시간 군중 시뮬레이션'; return; }
       const z = Z()[0]; emg = { x: z.x + z.w/2, y: z.y + z.h/2, target: null };
-      sim = true; $('status').textContent = '🚨 응급환자 발생! 의료센터로 이송 중';
+      sim = true; $('status').textContent = '\ud83d\udea8 응급환자 발생! 의료센터로 이송 중';
     }
     function setTime(h) { tHour = h; $('tSl').value = h; $('tTxt').textContent = h + ':00';$('tDesc').textContent = descT(h); }
     function togTl() {
-      if (tlTimer) { clearInterval(tlTimer); tlTimer = null; $('bTl').textContent = '▶ 재생'; }
-      else { $('bTl').textContent = '⏸ 일시정지'; tlTimer = setInterval(() => { let n = tHour + 1; if (n > 20) n = 10; setTime(n); }, 2500); }
+      if (tlTimer) { clearInterval(tlTimer); tlTimer = null; $('bTl').textContent = '\u25b6 재생'; }
+      else { $('bTl').textContent = '\u23f8 일시정지'; tlTimer = setInterval(() => { let n = tHour + 1; if (n > 20) n = 10; setTime(n); }, 2500); }
     }
 
     window.addEventListener('resize', resize);
@@ -579,3 +585,7 @@
   </script>
 </body>
 </html>
+"""
+
+# Streamlit을 통해 HTML 렌더링
+st.components.v1.html(HTML_CONTENT, height=900, scrolling=True)
