@@ -9,25 +9,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의 (카드 클릭 유도를 위한 스타일 포함)
+# 커스텀 스타일 정의
 st.markdown("""
     <style>
     .stApp {
         background-color: #F8FAFC;
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    }
-    .custom-card {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        border: 1px solid #E2E8F0;
-        margin-bottom: 20px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .custom-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
     .badge {
         display: inline-block;
@@ -47,10 +34,25 @@ st.markdown("""
         margin-top: 10px;
         color: #0F172A;
     }
+    /* Streamlit 버튼을 카드처럼 스타일링 */
     .stButton>button {
-        border-radius: 10px;
+        border-radius: 16px !important;
         font-weight: 600;
         width: 100%;
+        height: 310px !important;
+        padding: 24px !important;
+        text-align: left !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E2E8F0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -103,67 +105,42 @@ with top_col2:
 st.divider()
 
 # ==========================================
-# 1. 홈 화면 (Home Page) - 상단 카드 선택형 구조
+# 1. 홈 화면 (Home Page) - 카드 자체 클릭형 구조
 # ==========================================
 if st.session_state['page'] == 'home':
     st.markdown("## 🚀 시작할 메뉴를 선택하세요")
-    st.caption("아래의 카드 영역을 클릭하면 해당 작업 스튜디오로 이동합니다.")
+    st.caption("아래의 카드(버튼) 영역을 클릭하면 해당 작업 스튜디오로 이동합니다.")
     st.markdown("<br>", unsafe_allow_html=True)
     
     col_dash, col_proc = st.columns(2)
 
     with col_dash:
-        dash_card_html = """
-        <div style="
-            background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
-            border: 2px solid #93C5FD;
-            border-radius: 20px;
-            padding: 32px 28px;
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12);
-            min-height: 290px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        ">
-            <h1 style="font-size: 3rem; margin: 0 0 12px 0;">📊</h1>
-            <h2 style="color: #1E3A8A; margin: 0 0 14px 0; font-size: 1.55rem;">AI 스마트 공간 설계 대시보드</h2>
-            <p style="color: #475569; font-size: 1.02rem; line-height: 1.65; margin: 0;">
-                예산, 목적, 예상 방문객을 입력하면 실시간 2D/3D 디지털 트윈 조감도를 생성합니다.<br>
-                대화형 AI 어시스턴트와 시간대별 시뮬레이션으로 최적의 행사장 배치를 완성하세요.
-            </p>
+        # 대시보드 이동 카드 버튼 (내부 HTML로 카드 디자인 구현)
+        dash_btn_content = """
+        <div style="width: 100%;">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">📊</div>
+            <div style="color: #1E3A8A; font-size: 1.45rem; font-weight: 800; margin-bottom: 10px;">AI 스마트 공간 설계 대시보드</div>
+            <div style="color: #475569; font-size: 0.95rem; line-height: 1.5; font-weight: 400;">
+                예산, 목적, 예상 방문객을 입력하면 실시간 2D/3D 디지털 트윈 조감도를 생성합니다. 대화형 AI 어시스턴트와 시간대별 시뮬레이션으로 최적의 행사장 배치를 완성하세요.
+            </div>
         </div>
         """
-        st.markdown(dash_card_html, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        # 카드 바로 아래에 배치된 이동 버튼 (사용자 요청에 따라 카드 영역 하단 연동)
-        if st.button("📊 AI 행사 설계 대시보드 입장하기", key="btn_click_dash", type="primary", use_container_width=True):
+        if st.button(dash_btn_content, key="card_btn_dash", use_container_width=True):
             st.session_state['page'] = 'dashboard'
             st.rerun()
 
     with col_proc:
-        proc_card_html = """
-        <div style="
-            background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
-            border: 2px solid #86EFAC;
-            border-radius: 20px;
-            padding: 32px 28px;
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.12);
-            min-height: 290px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        ">
-            <h1 style="font-size: 3rem; margin: 0 0 12px 0;">⚙️</h1>
-            <h2 style="color: #065F46; margin: 0 0 14px 0; font-size: 1.55rem;">AI 설계 프로세스 및 메커니즘</h2>
-            <p style="color: #475569; font-size: 1.02rem; line-height: 1.65; margin: 0;">
-                기획부터 최종 배치안 도출까지의 다목적 최적화(Multi-objective Optimization) 과정을 살펴봅니다.<br>
-                군중 동선 예측, XAI(설명 가능한 AI) 설계 이유 및 안전성 평가 체계를 확인하세요.
-            </p>
+        # 프로세스 이동 카드 버튼
+        proc_btn_content = """
+        <div style="width: 100%;">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">⚙️</div>
+            <div style="color: #065F46; font-size: 1.45rem; font-weight: 800; margin-bottom: 10px;">AI 설계 프로세스 및 메커니즘</div>
+            <div style="color: #475569; font-size: 0.95rem; line-height: 1.5; font-weight: 400;">
+                기획부터 최종 배치안 도출까지의 다목적 최적화(Multi-objective Optimization) 과정을 살펴봅니다. 군중 동선 예측, XAI 설계 이유 및 안전성 평가 체계를 확인하세요.
+            </div>
         </div>
         """
-        st.markdown(proc_card_html, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("⚙️ AI 설계 프로세스 확인하기", key="btn_click_proc", type="secondary", use_container_width=True):
+        if st.button(proc_btn_content, key="card_btn_proc", use_container_width=True):
             st.session_state['page'] = 'process'
             st.rerun()
 
@@ -542,7 +519,7 @@ elif st.session_state['page'] == 'process':
     col_w1, col_w2, col_w3, col_w4, col_w5 = st.columns(5)
     with col_w1:
         st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
+            <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; text-align: center; min-height: 200px;">
                 <h3>📋</h3>
                 <h4>1단계: 정보 입력</h4>
                 <p style="font-size: 0.85rem; color: #64748B;">예산, 목적, 예상 관람객 및 맞춤 부스 요구사항 입력</p>
@@ -550,7 +527,7 @@ elif st.session_state['page'] == 'process':
         """, unsafe_allow_html=True)
     with col_w2:
         st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
+            <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; text-align: center; min-height: 200px;">
                 <h3>🌐</h3>
                 <h4>2단계: 디지털 트윈</h4>
                 <p style="font-size: 0.85rem; color: #64748B;">장소 지형 데이터를 바탕으로 3D 가상 공간 구축</p>
@@ -558,7 +535,7 @@ elif st.session_state['page'] == 'process':
         """, unsafe_allow_html=True)
     with col_w3:
         st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
+            <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; text-align: center; min-height: 200px;">
                 <h3>🤖</h3>
                 <h4>3단계: 자동 배치</h4>
                 <p style="font-size: 0.85rem; color: #64748B;">수천 개의 행사 배치안 및 강화학습 시뮬레이션 수행</p>
@@ -566,7 +543,7 @@ elif st.session_state['page'] == 'process':
         """, unsafe_allow_html=True)
     with col_w4:
         st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
+            <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; text-align: center; min-height: 200px;">
                 <h3>🚑</h3>
                 <h4>4단계: 다목적 최적화</h4>
                 <p style="font-size: 0.85rem; color: #64748B;">군중 이동 동선 분석, 병목 예방 및 응급 경로 최적화</p>
@@ -574,7 +551,7 @@ elif st.session_state['page'] == 'process':
         """, unsafe_allow_html=True)
     with col_w5:
         st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
+            <div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; text-align: center; min-height: 200px;">
                 <h3>📄</h3>
                 <h4>5단계: XAI 리포트</h4>
                 <p style="font-size: 0.85rem; color: #64748B;">설명 가능한 AI(XAI) 근거 및 최종 비교 리포트 출력</p>
@@ -595,7 +572,7 @@ elif st.session_state['page'] == 'settings':
         st.rerun()
 
     with st.container():
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+        st.markdown('<div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; margin-bottom: 20px;">', unsafe_allow_html=True)
         st.subheader("👤 계정 및 사용자 프로필")
         st.session_state['username'] = st.text_input("사용자 이름", value=st.session_state['username'])
         st.text_input("소속 부서 / 조직", value="이벤트 기획 1팀")
@@ -603,7 +580,7 @@ elif st.session_state['page'] == 'settings':
         st.markdown('</div>', unsafe_allow_html=True)
 
     with st.container():
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+        st.markdown('<div style="background-color: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; margin-bottom: 20px;">', unsafe_allow_html=True)
         st.subheader("🖥️ AI 디지털 트윈 엔진 옵션")
         st.toggle("도면 내 레이블 및 좌표 가이드 표시", value=True)
         st.toggle("실시간 군중 시뮬레이션 자동 실행", value=True)
