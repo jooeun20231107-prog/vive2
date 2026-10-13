@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Streamlit 페이지 설정 (반드시 코드 최상단에 위치해야 합니다)
+# Streamlit 페이지 설정
 st.set_page_config(
     page_title="이벤트 온 (Event-On) - AI 행사 자동 설계 플랫폼",
     page_icon="🎪",
@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의
+# 커스텀 스타일 정의 (카드 클릭 유도를 위한 스타일 포함)
 st.markdown("""
     <style>
     .stApp {
@@ -23,6 +23,11 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         border: 1px solid #E2E8F0;
         margin-bottom: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .custom-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
     .badge {
         display: inline-block;
@@ -45,6 +50,7 @@ st.markdown("""
     .stButton>button {
         border-radius: 10px;
         font-weight: 600;
+        width: 100%;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -57,7 +63,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = "주은님"
 
-# 사이드바 구성 (불필요한 공백 및 라디오 버튼 완벽 제거)
+# 사이드바 구성
 with st.sidebar:
     if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
         st.session_state['page'] = 'home'
@@ -97,11 +103,11 @@ with top_col2:
 st.divider()
 
 # ==========================================
-# 1. 홈 화면 (Home Page)
+# 1. 홈 화면 (Home Page) - 상단 카드 선택형 구조
 # ==========================================
 if st.session_state['page'] == 'home':
     st.markdown("## 🚀 시작할 메뉴를 선택하세요")
-    st.caption("카드나 하단 버튼을 클릭하면 해당 작업 스튜디오로 이동합니다.")
+    st.caption("아래의 카드 영역을 클릭하면 해당 작업 스튜디오로 이동합니다.")
     st.markdown("<br>", unsafe_allow_html=True)
     
     col_dash, col_proc = st.columns(2)
@@ -114,7 +120,7 @@ if st.session_state['page'] == 'home':
             border-radius: 20px;
             padding: 32px 28px;
             box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12);
-            min-height: 270px;
+            min-height: 290px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -129,7 +135,8 @@ if st.session_state['page'] == 'home':
         """
         st.markdown(dash_card_html, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📊 AI 행사 설계 대시보드 시작하기", key="btn_click_dash", type="primary", use_container_width=True):
+        # 카드 바로 아래에 배치된 이동 버튼 (사용자 요청에 따라 카드 영역 하단 연동)
+        if st.button("📊 AI 행사 설계 대시보드 입장하기", key="btn_click_dash", type="primary", use_container_width=True):
             st.session_state['page'] = 'dashboard'
             st.rerun()
 
@@ -141,7 +148,7 @@ if st.session_state['page'] == 'home':
             border-radius: 20px;
             padding: 32px 28px;
             box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.12);
-            min-height: 270px;
+            min-height: 290px;
             display: flex;
             flex-direction: column;
             justify-content: center;
