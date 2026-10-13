@@ -58,7 +58,6 @@ with st.sidebar.form("event_form"):
         "행사 목적",
         ["문화 예술 공연", "기술 전시 및 박람회", "지역 축제", "기업 행사"],
     )
-    # [수정 완료] min_p -> min_value로 수정
     budget = st.slider(
         "예산 (원)",
         min_value=10000000,
@@ -104,7 +103,7 @@ with tab1:
         st.success("✨ 최적의 행사장 설계가 완료되었습니다!")
 
     # 레이아웃 분할 (좌측: 배치도 시각화, 우측: 실시간 군중 및 구역 정보)
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.column([2, 1])
 
     with col1:
         # 가상의 행사장 좌표 데이터 생성 (디지털 트윈 배치도)
@@ -169,80 +168,4 @@ with tab1:
 
         st.markdown("#### 🛠️ 입력된 맞춤 부스 반영 결과")
         if custom_booths:
-            booths = [b.strip() for b in custom_booths.split(",")]
-            for b in booths:
-                st.markdown(f"- ✅ `{b}` 자동 최적 배치 완료")
-        else:
-            st.markdown("- ℹ️ 기본 추천 부스가 적용되었습니다.")
-
-with tab2:
-    st.markdown("### 🔄 AI 행사 설계 프로세스 (Workflow)")
-    st.markdown(
-        "행사 기획부터 최종 설계안이 도출되기까지의 전체 자동화 파이프라인입니다."
-    )
-
-    workflow_steps = [
-        {
-            "단계": "1단계: 정보 입력 및 분석",
-            "설명": "운영자가 입력한 예산, 목적, 방문객 수 및 맞춤형 부스 요구사항을 자연어 처리(NLP) 및 규칙 기반 엔진으로 분석합니다.",
-        },
-        {
-            "단계": "2단계: 디지털 트윈 환경 생성",
-            "설명": "선택된 장소의 지형 데이터를 바탕으로 3D 가상 공간(디지털 트윈)을 구축합니다.",
-        },
-        {
-            "단계": "3단계: 수천 개 배치안 자동 생성",
-            "설명": "강화학습 알고리즘을 통해 안전 거리, 접근성, 공간 효율성을 고려한 수천 가지의 대안 배치를 시뮬레이션합니다.",
-        },
-        {
-            "단계": "4단계: 군중 동선 및 다목적 최적화",
-            "설명": "군중 이동 시뮬레이션을 돌려 병목 현상을 예측하고, 안전성과 편의성을 동시에 만족하는 최적안을 도출합니다.",
-        },
-        {
-            "단계": "5단계: XAI 설명 및 최종 리포트 제공",
-            "설명": "AI가 왜 이러한 배치를 선택했는지 이유를 설명(XAI)하고, 전·후 비교 분석 결과와 함께 최종 리포트를 제공합니다.",
-        },
-    ]
-
-    for step in workflow_steps:
-        with st.container():
-            st.markdown(
-                f"""
-                <div class="card">
-                    <h4>{step["단계"]}</h4>
-                    <p>{step["설명"]}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-with tab3:
-    st.markdown("### 📊 분석 리포트 및 설명 가능한 AI (XAI) 결과")
-
-    col_a, col_b = st.columns(2)
-
-    with col_a:
-        st.markdown("#### 🧠 XAI (설명 가능한 AI) 설계 이유")
-        st.markdown(
-            """
-        - **응급 의료 센터 위치 선정**: 출입구 및 메인 무대에서 반경 30m 이내에 배치하여 응급 상황 시 **골든타임(3분 이내)** 확보.
-        - **푸드존과 휴게공간 분산**: 흡연 및 취식으로 인한 밀집도를 낮추기 위해 메인 공연장과 대각선 방향으로 이격 배치.
-        - **군중 동선 최적화**: 방문객 이동 동선이 겹치지 않도록 일방통행 형태의 보행자 로드 설계 반영.
-        """
-        )
-
-    with col_b:
-        st.markdown("#### 📈 설계 전·후 비교 분석")
-        comparison_data = {
-            "평가지표": ["평균 대기 시간", "비상 탈출 소요 시간", "공간 활용률", "안전사고 위험도"],
-            "기존 수동 설계": ["25분", "8분 30초", "65%", "주의 (중간)"],
-            "AI 최적화 설계": ["10분", "4분 15초", "92%", "안전 (낮음)"],
-        }
-        df_comp = pd.DataFrame(comparison_data)
-        st.table(df_comp)
-
-    st.markdown("---")
-    col_btn1, col_btn2 = st.columns([1, 1])
-    with col_btn1:
-        if st.button("📥 최종 설계안 다운로드 (PDF)"):
-            st.success("설계 리포트
+            booths = [b.strip() for b in custom_booths.split(",
