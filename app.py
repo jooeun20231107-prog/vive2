@@ -1,880 +1,350 @@
-import streamlit as st
-import streamlit.components.v1 as components
+# -*- coding: utf-8 -*-
+"""디지털 트윈 렌더러: 최적화 결과(JSON)를 받아 아이소메트릭 3D / 2D 평면 + 실시간 군중 시뮬레이션 HTML 생성."""
+import json
 
-# Streamlit 페이지 설정
-st.set_page_config(
-    page_title="이벤트 온 (Event-On) - AI 행사 자동 설계 플랫폼",
-    page_icon="🎪",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# 커스텀 스타일 정의 (사이드바 위/아래 완전 분리 및 넓은 여백 확보)
-st.markdown("""
-    <style>
-    /* 전체 배경 및 폰트 */
-    .stApp {
-        background-color: #F8FAFC;
-        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    }
-    
-    /* 카드 컨테이너 스타일 */
-    .custom-card {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        border: 1px solid #E2E8F0;
-        margin-bottom: 20px;
-    }
-
-    /* 뱃지 및 태그 디자인 */
-    .badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
-    .badge-excellent { background-color: #DCFCE7; color: #15803D; }
-    .badge-good { background-color: #DBEAFE; color: #1E40AF; }
-    .badge-warning { background-color: #FEF3C7; color: #B45309; }
-
-    /* AI 요약 박스 */
-    .reason-box {
-        background-color: #F0F9FF;
-        border-left: 4px solid #0284C7;
-        padding: 16px;
-        border-radius: 12px;
-        margin-top: 10px;
-        color: #0F172A;
-    }
-
-    /* Streamlit 버튼 커스텀 */
-    .stButton>button {
-        border-radius: 10px;
-        font-weight: 600;
-    }
-
-    /* 사이드바 flex 배치: 높이를 늘려 중간 여백을 넓게 확보 */
-    [data-testid="stSidebar"] > div:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 94vh;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# 세션 상태 초기화
-if 'page' not in st.session_state:
-    st.session_state['page'] = 'home'
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = True
-if 'username' not in st.session_state:
-    st.session_state['username'] = "주은님"
-
-# 사이드바 구성
-with st.sidebar:
-    # --- [상단 영역] 이벤트 온 로고 및 구분선 ---
-    with st.container():
-        if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
-            st.session_state['page'] = 'home'
-            st.rerun()
-
-        st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
-        st.divider()
-
-    # --- [하단 영역] 주은님 정보 및 로그아웃 버튼 (맨 밑으로 고정) ---
-    with st.container():
-        if st.session_state['logged_in']:
-            st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
-            if st.button("로그아웃", key="sidebar_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.rerun()
-
-# 상단 헤더 영역
-top_col1, top_col2 = st.columns([3, 1])
-with top_col1:
-    st.title("🎪 이벤트 온 (Event-On)")
-with top_col2:
-    st.markdown("<div style='text-align: right; padding-top: 10px;'>", unsafe_allow_html=True)
-    if st.session_state['logged_in']:
-        with st.popover(f"👤 {st.session_state['username']}"):
-            st.write(f"**{st.session_state['username']}** (총괄 기획자)")
-            st.caption("이메일: user@event-on.ai")
-            st.divider()
-            if st.button("설정 관리", key="pop_settings"):
-                st.session_state['page'] = 'settings'
-                st.rerun()
-            if st.button("로그아웃", key="pop_logout"):
-                st.session_state['logged_in'] = False
-                st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-st.divider()
-
-# ==========================================
-# 1. 홈 화면 (Home Page)
-# ==========================================
-if st.session_state['page'] == 'home':
-    st.markdown("## 🚀 시작할 메뉴를 선택하세요")
-    st.caption("카드나 하단 버튼을 클릭하면 해당 작업 스튜디오로 이동합니다.")
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col_dash, col_proc = st.columns(2)
-
-    with col_dash:
-        dash_card_html = """
-        <div style="
-            background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
-            border: 2px solid #93C5FD;
-            border-radius: 20px;
-            padding: 32px 28px;
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12);
-            min-height: 270px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        ">
-            <h1 style="font-size: 3rem; margin: 0 0 12px 0;">📊</h1>
-            <h2 style="color: #1E3A8A; margin: 0 0 14px 0; font-size: 1.55rem;">AI 스마트 공간 설계 대시보드</h2>
-            <p style="color: #475569; font-size: 1.02rem; line-height: 1.65; margin: 0;">
-                예산, 목적, 예상 방문객을 입력하면 실시간 2D/3D 디지털 트윈 조감도를 생성합니다.<br>
-                대화형 AI 어시스턴트와 시간대별 시뮬레이션으로 최적의 행사장 배치를 완성하세요.
-            </p>
-        </div>
-        """
-        st.markdown(dash_card_html, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📊 AI 행사 설계 대시보드 시작하기", key="btn_click_dash", type="primary", use_container_width=True):
-            st.session_state['page'] = 'dashboard'
-            st.rerun()
-
-    with col_proc:
-        proc_card_html = """
-        <div style="
-            background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
-            border: 2px solid #86EFAC;
-            border-radius: 20px;
-            padding: 32px 28px;
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.12);
-            min-height: 270px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        ">
-            <h1 style="font-size: 3rem; margin: 0 0 12px 0;">⚙️</h1>
-            <h2 style="color: #065F46; margin: 0 0 14px 0; font-size: 1.55rem;">AI 설계 프로세스 및 메커니즘</h2>
-            <p style="color: #475569; font-size: 1.02rem; line-height: 1.65; margin: 0;">
-                기획부터 최종 배치안 도출까지의 다목적 최적화(Multi-objective Optimization) 과정을 살펴봅니다.<br>
-                군중 동선 예측, XAI(설명 가능한 AI) 설계 이유 및 안전성 평가 체계를 확인하세요.
-            </p>
-        </div>
-        """
-        st.markdown(proc_card_html, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("⚙️ AI 설계 프로세스 확인하기", key="btn_click_proc", type="secondary", use_container_width=True):
-            st.session_state['page'] = 'process'
-            st.rerun()
-
-# ==========================================
-# 2. 대시보드 화면 (Dashboard Page)
-# ==========================================
-elif st.session_state['page'] == 'dashboard':
-    st.markdown("## 📊 AI 디지털 트윈 공간 설계 대시보드")
-    st.caption("디지털 트윈 및 실시간 군중 밀집도 시뮬레이션을 활용한 지능형 행사 자동 설계 플랫폼입니다.")
-
-    EVENT_AI_HTML = r"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event On - AI 행사장 설계 시스템</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family:"Pretendard Variable", Pretendard, sans-serif;
-      color:#1e293b;
-      background:#f8fafc;
-      overflow-x:hidden;
-      padding:10px;
-    }
-    button,input,select,textarea{font:inherit;}
-    button{cursor:pointer;transition:all 0.2s ease;}
-
-    .dashboard-container{
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-    
-    .info-strip{
-      background:#ffffff;
-      border:1px solid #e2e8f0;
-      border-radius:16px;
-      padding:12px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      gap:12px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.02);
-    }
-    .info-strip-group{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-    .info-box{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding-right:12px;
-      border-right:1px solid #f1f5f9;
-    }
-    .info-box:last-child{border-right:none;}
-    .info-box-icon{
-      width:32px;
-      height:32px;
-      border-radius:8px;
-      background:#eff6ff;
-      color:#2563eb;
-      display:grid;
-      place-items:center;
-      font-size:14px;
-    }
-    .info-box-text label{display:block;font-size:10px;color:#64748b;font-weight:700;}
-    .info-box-text span{font-size:12.5px;font-weight:800;color:#0f172a;}
-
-    .dashboard-main-grid{
-      display:grid;
-      grid-template-columns: 1.5fr 0.9fr 1fr;
-      gap:16px;
-    }
-    @media(max-width: 1100px){
-      .dashboard-main-grid{grid-template-columns: 1fr;}
-    }
-
-    .card-panel{
-      background:#ffffff;
-      border:1px solid #e2e8f0;
-      border-radius:16px;
-      padding:16px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.02);
-      display:flex;
-      flex-direction:column;
-    }
-    .card-head{
-      font-size:14px;
-      font-weight:800;
-      color:#0f172a;
-      margin-bottom:12px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-    .card-badge{
-      font-size:10.5px;
-      background:#eff6ff;
-      color:#2563eb;
-      padding:3px 8px;
-      border-radius:12px;
-      font-weight:700;
-    }
-
-    .map-wrap{
-      position:relative;
-      width:100%;
-      height:360px;
-      background:#1e293b;
-      border-radius:12px;
-      overflow:hidden;
-      border:1px solid #334155;
-    }
-    #venueCanvas, #heatmapCanvas, #peopleCanvas, #container3D{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-    }
-    #heatmapCanvas{z-index:5;opacity:0.85;pointer-events:none;}
-    #peopleCanvas{z-index:10;pointer-events:none;}
-    #container3D{z-index:15;display:none;background:#0f172a;}
-
-    .map-legend-overlay{
-      position:absolute;
-      left:10px;
-      bottom:10px;
-      z-index:20;
-      background:rgba(255,255,255,0.92);
-      backdrop-filter:blur(6px);
-      padding:8px 12px;
-      border-radius:10px;
-      font-size:10.5px;
-      border:1px solid #e2e8f0;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      display:grid;
-      grid-template-columns:repeat(2, 1fr);
-      gap:4px 10px;
-    }
-    .legend-item{display:flex;align-items:center;gap:5px;font-weight:700;color:#334155;}
-    .legend-dot{width:8px;height:8px;border-radius:2px;}
-
-    .map-controls-bar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:10px;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .btn-secondary{
-      background:#f1f5f9;
-      color:#334155;
-      border:1px solid #cbd5e1;
-      padding:6px 12px;
-      border-radius:8px;
-      font-size:11.5px;
-      font-weight:700;
-    }
-    .btn-secondary:hover{background:#e2e8f0;}
-    .btn-warning{
-      background:#fef3c7;
-      color:#b45309;
-      border:1px solid #fde68a;
-      padding:6px 12px;
-      border-radius:8px;
-      font-size:11.5px;
-      font-weight:700;
-    }
-    .btn-warning.active{background:#f59e0b;color:#fff;}
-    .btn-danger{
-      background:#fee2e2;
-      color:#b91c1c;
-      border:1px solid #fca5a5;
-      padding:6px 12px;
-      border-radius:8px;
-      font-size:11.5px;
-      font-weight:700;
-    }
-    .btn-danger.active{background:#ef4444;color:#fff;}
-
-    .timeline-container{
-      background:#f8fafc;
-      border:1px solid #e2e8f0;
-      border-radius:12px;
-      padding:10px 14px;
-      margin-bottom:12px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .timeline-slider{flex:1;accent-color:#2563eb;cursor:pointer;}
-    .time-badge{background:#2563eb;color:#fff;font-weight:800;font-size:12px;padding:4px 10px;border-radius:20px;min-width:70px;text-align:center;}
-
-    .score-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}
-    .score-tbl th,.score-tbl td{padding:8px 6px;text-align:left;border-bottom:1px solid #f1f5f9;}
-    .score-tbl th{color:#64748b;font-weight:700;font-size:11px;}
-    .grade-badge{padding:2px 8px;border-radius:10px;font-weight:800;font-size:10.5px;display:inline-block;}
-    .gb-excel{background:#dcfce7;color:#15803d;}
-    .gb-good{background:#e0f2fe;color:#0369a1;}
-
-    .main-ai-assistant{
-      background:linear-gradient(135deg, #f8fafc, #eff6ff);
-      border:1.5px solid #bfdbfe;
-      border-radius:16px;
-      padding:16px;
-      margin-bottom:16px;
-    }
-    .main-ai-header{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#1e3a8a;margin-bottom:10px;}
-    .main-ai-chatbox{
-      background:#ffffff;
-      border:1px solid #cbd5e1;
-      border-radius:10px;
-      padding:10px 12px;
-      height:90px;
-      overflow-y:auto;
-      font-size:12px;
-      margin-bottom:10px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .chat-msg-ai{background:#eff6ff;color:#1e40af;padding:6px 10px;border-radius:8px;align-self:flex-start;max-width:85%;line-height:1.4;}
-    .chat-msg-user{background:#2563eb;color:#ffffff;padding:6px 10px;border-radius:8px;align-self:flex-end;max-width:85%;line-height:1.4;}
-    .main-ai-inputgroup{display:flex;gap:8px;}
-    .main-ai-inputgroup input{flex:1;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;outline:none;}
-    .btn-primary-custom{
-      background:linear-gradient(135deg, #2563eb, #1d4ed8);
-      color:#ffffff;border:none;padding:8px 16px;border-radius:8px;font-weight:800;font-size:12px;
-    }
-    </style>
-    </head>
-    <body>
-
-    <div class="dashboard-container">
-      <div class="main-ai-assistant">
-        <div class="main-ai-header">
-          <span>🤖 AI 메인 어시스턴트 (실시간 레이아웃 제어)</span>
-          <span style="font-size:11px;color:#3b82f6;font-weight:600;">— 실시간 명령어를 통해 배치도를 즉시 재구성할 수 있습니다.</span>
-        </div>
-        <div class="main-ai-chatbox" id="mainAiChatBox">
-          <div class="chat-msg-ai">
-            안녕하세요 주은님! 원하시는 부스 추가나 배치 수정 사항을 말씀해 주시면 디지털 트윈에 즉시 반영합니다.
-          </div>
-        </div>
-        <div class="main-ai-inputgroup">
-          <input type="text" id="mainAiInput" placeholder="예: 친환경 굿즈 팝업스토어를 추가하고 응급 부스를 중앙으로 이동해줘" onkeypress="if(event.key==='Enter') sendMainAiMsg()">
-          <button class="btn-primary-custom" onclick="sendMainAiMsg()">보내기</button>
-        </div>
-      </div>
-
-      <div class="timeline-container">
-        <span style="font-size:12px;font-weight:800;color:#0f172a;">⏰ 시간별 관람객 시뮬레이션:</span>
-        <button class="btn-secondary" id="btnTimelinePlay" onclick="toggleTimelinePlay()">▶ 시간 재생</button>
-        <input type="range" id="timeSlider" class="timeline-slider" min="10" max="20" step="1" value="14" oninput="updateTimeSimulation(this.value)">
-        <div class="time-badge" id="timeDisplay">14:00</div>
-        <span style="font-size:11px;color:#64748b;font-weight:600;" id="timeDesc">관람 인원 피크 타임 (공연 및 체험)</span>
-      </div>
-
-      <div class="info-strip">
-        <div class="info-strip-group">
-          <div class="info-box"><div class="info-box-icon">📌</div><div class="info-box-text"><label>행사명</label><span>2026 청춘 페스티벌</span></div></div>
-          <div class="info-box"><div class="info-box-icon">🏞️</div><div class="info-box-text"><label>장소</label><span>서울 올림픽공원 잔디마당</span></div></div>
-          <div class="info-box"><div class="info-box-icon">👥</div><div class="info-box-text"><label>예상 관람객</label><span>5,000명</span></div></div>
-          <div class="info-box"><div class="info-box-icon">💰</div><div class="info-box-text"><label>예산 규모</label><span>5,000만원</span></div></div>
-        </div>
-      </div>
-
-      <div class="dashboard-main-grid">
-        <div class="card-panel">
-          <div class="card-head">
-            <span>🗺️ 행사장 배치도 (디지털 트윈 렌더링)</span>
-            <button class="btn-secondary" id="btnToggle3D" onclick="toggle3DView()">🧊 3D 입체뷰 보기</button>
-          </div>
-          <div class="map-wrap" id="mapWrap">
-            <canvas id="venueCanvas"></canvas>
-            <canvas id="peopleCanvas"></canvas>
-            <div id="container3D"></div>
-            <div class="map-legend-overlay">
-              <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6;"></span> 공연장</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> 체험부스</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> 푸드존</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> 휴식공간</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> 응급의료</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#2563eb;"></span> 화장실</div>
-            </div>
-          </div>
-          <div class="map-controls-bar">
-            <div style="display:flex;gap:6px;">
-              <button class="btn-secondary" id="btnToggleSim" onclick="toggleSim()">▶ 시뮬레이션 시작</button>
-              <button class="btn-warning" id="btnRain" onclick="toggleRainEnv()">🌧️ 우천 모드</button>
-              <button class="btn-danger" id="btnEmergency" onclick="triggerEmergencyEnv()">🚨 응급환자 후송</button>
-            </div>
-            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">상태: 대기중</span>
-          </div>
-        </div>
-
-        <div class="card-panel">
-          <div class="card-head">
-            <span>🔥 시간별 군중 밀집도 Heatmap</span>
-            <span class="card-badge" id="envBadge">일반 상태</span>
-          </div>
-          <div class="map-wrap">
-            <canvas id="heatmapCanvas"></canvas>
-          </div>
-          <div style="display:flex;justify-content:space-around;font-size:10px;color:#64748b;margin-top:10px;font-weight:700;">
-            <span style="color:#10b981;">🟢 원활</span>
-            <span style="color:#eab308;">🟡 보통</span>
-            <span style="color:#f97316;">🟠 혼잡</span>
-            <span style="color:#ef4444;">🔴 위험</span>
-          </div>
-        </div>
-
-        <div class="card-panel">
-          <div class="card-head"><span>💡 AI 평가 결과 & XAI</span></div>
-          <table class="score-tbl">
-            <thead><tr><th>평가 항목</th><th>점수</th><th>등급</th></tr></thead>
-            <tbody>
-              <tr><td>비상 안전성</td><td>95점</td><td><span class="grade-badge gb-excel">매우 우수</span></td></tr>
-              <tr><td>동선 효율성</td><td>92점</td><td><span class="grade-badge gb-excel">매우 우수</span></td></tr>
-              <tr><td>접근성</td><td>88점</td><td><span class="grade-badge gb-good">우수</span></td></tr>
-              <tr><td>혼잡도 분산</td><td>90점</td><td><span class="grade-badge gb-excel">매우 우수</span></td></tr>
-            </tbody>
-          </table>
-          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:8px 0 4px 0;">🧠 XAI 설계 근거</div>
-          <p style="font-size:11.5px;color:#475569;line-height:1.5;">
-            - 응급센터는 동측 비상도로 인접 배치하여 골든타임 확보.<br>
-            - 푸드존은 서측 독립 구역 배치로 조기 연기 및 소음 차단.<br>
-            - 무대는 북쪽 상단 중앙 배치로 시야각 극대화.
-          </p>
-        </div>
-
-      </div>
+TWIN_TEMPLATE = r"""
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Pretendard,-apple-system,system-ui,sans-serif;background:transparent;color:#0f172a}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+button{cursor:pointer;border:1px solid #cbd5e1;background:#f1f5f9;color:#334155;padding:6px 11px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit}
+button:hover{background:#e2e8f0}
+button.on{background:#2563eb;color:#fff;border-color:#1d4ed8}
+button.warn.on{background:#f59e0b;border-color:#d97706}
+button.danger.on{background:#ef4444;border-color:#dc2626}
+.badge{font-size:11px;font-weight:700;color:#2563eb;background:#eff6ff;padding:3px 9px;border-radius:12px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
+.card h4{font-size:13px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.wrap{position:relative;width:100%;background:#1e293b;border-radius:10px;overflow:hidden}
+#wrap{aspect-ratio:1.85}
+#wrap2{aspect-ratio:1.6}
+.wrap canvas,.wrap .c3{position:absolute;inset:0;width:100%;height:100%}
+.c3{cursor:grab;background:linear-gradient(#e0f2fe,#f8fafc)}
+.legend{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,.93);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;display:grid;grid-template-columns:repeat(3,auto);gap:3px 12px;z-index:5;pointer-events:none}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.hint{position:absolute;right:8px;top:8px;background:rgba(15,23,42,.65);color:#fff;font-size:10.5px;padding:4px 9px;border-radius:8px;z-index:5;pointer-events:none}
+.tl{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;margin-bottom:8px;font-size:12px;font-weight:700;flex-wrap:wrap}
+.tl input{flex:1;min-width:120px;accent-color:#2563eb}
+.tm{background:#2563eb;color:#fff;border-radius:16px;padding:2px 10px;font-size:12px;min-width:56px;text-align:center}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.kpi div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:11px;color:#64748b;font-weight:700}
+.kpi b{display:block;font-size:17px;color:#0f172a}
+.hl{font-size:11px;color:#64748b;font-weight:700;display:flex;justify-content:space-around;margin-top:6px}
+.zl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;font-size:11px;font-weight:700;max-height:190px;overflow:auto}
+.zl span{background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid var(--c);border-radius:6px;padding:4px 7px}
+</style></head><body>
+<div class="bar">
+  <button id="bMode" class="on" onclick="setMode('after')">✦ AI 최적 배치</button>
+  <button id="bModeB" onclick="setMode('before')">설계 전(기존) 배치</button>
+  <span style="width:10px"></span>
+  <button id="b3d" class="on" onclick="setView(true)">🧊 3D 입체 설계도</button>
+  <button id="b2d" onclick="setView(false)">🗺️ 2D 평면도</button>
+  <button id="bHeat3" onclick="togHeat3()">🔥 히트맵 겹치기</button>
+  <span style="flex:1"></span>
+  <button id="bPlay" onclick="togSim()">⏸ 시뮬레이션 정지</button>
+  <button id="bRain" class="warn" onclick="togRain()">🌧️ 우천</button>
+  <button id="bEmg" class="danger" onclick="togEmg()">🚨 응급환자 발생</button>
+</div>
+<div class="tl">⏰ 시간대
+  <button id="bTl" onclick="togTl()">▶ 재생</button>
+  <input type="range" id="tSl" min="10" max="20" step="1" value="14" oninput="setTime(+this.value)">
+  <span class="tm" id="tTxt">14:00</span><span id="tDesc" style="color:#64748b;font-weight:600"></span>
+</div>
+<div class="card"><h4><span>🗺️ 행사장 디지털 트윈 <span id="verTxt" style="color:#64748b;font-weight:600"></span></span>
+  <span><span class="badge" id="peopleTxt"></span> <span class="badge" id="status">실시간 군중 시뮬레이션</span></span></h4>
+  <div class="wrap" id="wrap">
+    <canvas id="cv" style="display:none"></canvas><canvas id="hm" style="display:none;opacity:.75;pointer-events:none"></canvas><canvas id="pp" style="display:none;pointer-events:none"></canvas>
+    <div class="c3" id="c3"></div>
+    <div class="legend" id="legend"></div>
+    <div class="hint" id="hint">드래그: 회전 · 휠: 확대/축소</div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="card"><h4><span>🔥 실시간 군중 밀집도</span><span class="badge" id="envTxt">일반 상태</span></h4>
+    <div class="wrap" id="wrap2"><canvas id="hm2"></canvas></div>
+    <div class="hl"><span style="color:#10b981">🟢 원활</span><span style="color:#eab308">🟡 보통(0.25~)</span><span style="color:#f97316">🟠 혼잡(0.5~)</span><span style="color:#ef4444">🔴 위험(0.9~)</span></div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:4px;text-align:center">단위: 명/㎡ · 구역 체류 + 출입구 이동 군중 반영</div>
+  </div>
+  <div class="card"><h4><span>📊 현재 상태</span></h4>
+    <div class="kpi">
+      <div>현재 최대 밀도<b id="kPeak">-</b></div><div>혼잡 구역 비율<b id="kBott">-</b></div>
+      <div>응급 최대 도달<b id="kMed">-</b></div><div>위험 구역<b id="kRisk">-</b></div>
     </div>
+    <div style="font-size:12px;font-weight:800;margin:6px 0">📍 배치된 구역 <span id="zCnt" style="color:#64748b"></span></div>
+    <div class="zl" id="zlist"></div>
+  </div>
+</div>
+<script>
+const D = __DATA__;
+const WW=160, WH=100, GX=40, GY=25;
+let mode='after', sim=true, rain=false, emg=null, tHour=14, tlTimer=null, is3d=true, heat3=false;
+const $=id=>document.getElementById(id);
+const cv=$('cv'), hm=$('hm'), pp=$('pp'), hm2=$('hm2');
+const cx=cv.getContext('2d'), hx=hm.getContext('2d'), px=pp.getContext('2d'), h2=hm2.getContext('2d');
+const wrap=$('wrap'), wrap2=$('wrap2');
+let W=0,H=0,S=1,W2=0,H2=0;
+const Z=()=> mode==='after'?D.zones:D.before_zones;
+const mpu=D.mpu, cellArea=(WW/GX)*(WH/GY)*mpu*mpu;
+const NAG=320; let agents=[]; let raindrops=[];
+let heat=new Float32Array(GX*GY);
 
-    <script>
-    let venueCanvas, venueCtx, peopleCanvas, peopleCtx, heatmapCanvas, heatmapCtx;
-    let simRunning = false, isRain = false, isEmergency = false, emergencyPos = null;
-    let people = [], raindrops = [];
-    let is3DActive = false, scene3D, camera3D, renderer3D;
+$('legend').innerHTML=
+ [['#8b5cf6','공연장'],['#3b82f6','체험부스'],['#f59e0b','푸드존'],['#10b981','휴게공간'],['#ef4444','응급의료'],['#0ea5e9','안내센터'],['#06b6d4','화장실'],['#ec4899','사용자 부스'],['#1e293b','출입구']]
+ .map(a=>`<span><i style="background:${a[0]}"></i>${a[1]}</span>`).join('');
 
-    const booths = {
-      stage: {x: 0.5, y: 0.15, bw: 0.28, bh: 0.15, title: '공연장 (메인무대)', color: '#8b5cf6', icon: '🎪'},
-      booth: {x: 0.22, y: 0.35, bw: 0.20, bh: 0.18, title: '체험부스', color: '#3b82f6', icon: '🛍️'},
-      food: {x: 0.22, y: 0.65, bw: 0.20, bh: 0.18, title: '푸드존', color: '#f59e0b', icon: '🍔'},
-      rest: {x: 0.5, y: 0.55, bw: 0.28, bh: 0.20, title: '휴게공간', color: '#10b981', icon: '🏕️'},
-      medical: {x: 0.78, y: 0.35, bw: 0.18, bh: 0.15, title: '응급의료센터', color: '#ef4444', icon: '🚑'},
-      toilet: {x: 0.78, y: 0.60, bw: 0.18, bh: 0.15, title: '화장실', color: '#2563eb', icon: '🚻'}
-    };
+function resize(){
+  W=wrap.clientWidth; H=wrap.clientHeight; S=W/WW;
+  [cv,hm,pp].forEach(c=>{c.width=W;c.height=H});
+  W2=wrap2.clientWidth; H2=wrap2.clientHeight; hm2.width=W2; hm2.height=H2;
+  drawBase(); if(R3){ size3(); }
+}
+function factor(h){ if(h<12)return .55; if(h<15)return 1.0; if(h<18)return .8; return .65; }
+function descT(h){ return h<12?'개장 초반 - 순차 입장(여유)':h<15?'피크 - 푸드·공연 집중(혼잡)':h<18?'오후 - 체험·휴게 분산':'폐장 전 - 공연 집중 및 퇴장'; }
+function pickZone(){
+  const Zs=Z(); let tot=0; const w=Zs.map(z=>{const a=(z.type==='medical')?0:z.attract*(z.type==='stage'&&tHour>=18?1.5:1)*(z.type==='food'&&tHour>=12&&tHour<15?1.5:1);tot+=a;return a});
+  let r=Math.random()*tot; for(let i=0;i<Zs.length;i++){ r-=w[i]; if(r<=0) return i; } return 0;
+}
+function spawn(a){
+  const g=D.gates[Math.floor(Math.random()*D.gates.length)];
+  a.x=g.x+(Math.random()-.5)*4; a.y=g.y+(Math.random()-.5)*4; a.leaving=false; a.dwell=0; a.zone=pickZone(); setTarget(a);
+}
+function setTarget(a){
+  const z=Z()[a.zone]; a.tx=z.x-1.5+Math.random()*(z.w+3); a.ty=z.y-1.5+Math.random()*(z.h+3);
+  a.sp=.28+Math.random()*.2;
+}
+function initAgents(){
+  agents=[]; for(let i=0;i<NAG;i++){ const a={}; spawn(a); const t=Math.random(); a.x=a.x+(a.tx-a.x)*t; a.y=a.y+(a.ty-a.y)*t; a.active=i<NAG*factor(tHour); agents.push(a);}
+  raindrops=[]; for(let i=0;i<110;i++) raindrops.push({x:Math.random()*W,y:Math.random()*H,l:7+Math.random()*10,v:6+Math.random()*6});
+}
+function step(dt){
+  const f=factor(tHour); const n=Math.floor(NAG*f);
+  agents.forEach((a,i)=>{ a.active=i<n; if(!a.active) return;
+    if(a.dwell>0){ a.dwell-=dt; a.x+=(Math.random()-.5)*.06; a.y+=(Math.random()-.5)*.06;
+      if(a.dwell<=0){ if(Math.random()<.35){ a.leaving=true; const g=D.gates[Math.floor(Math.random()*D.gates.length)]; a.tx=g.x; a.ty=g.y; } else { a.zone=pickZone(); setTarget(a);} } return; }
+    let dx=a.tx-a.x, dy=a.ty-a.y, d=Math.hypot(dx,dy);
+    let sp=a.sp*(rain?1.6:1);
+    if(rain&&!a.leaving){ const st=Z().find(z=>z.type==='stage'); if(st){a.tx=st.x+st.w/2; a.ty=st.y+st.h/2+st.h*.7; dx=a.tx-a.x; dy=a.ty-a.y; d=Math.hypot(dx,dy);} }
+    if(emg){ const ex=a.x-emg.x, ey=a.y-emg.y, ed=Math.hypot(ex,ey); if(ed<9&&ed>0){ a.x+=ex/ed*.5; a.y+=ey/ed*.5; } }
+    if(d<1.2){ if(a.leaving){ spawn(a);} else { a.dwell=3+Math.random()*9; } }
+    else { a.x+=dx/d*sp; a.y+=dy/d*sp; }
+  });
+  for(let i=0;i<agents.length;i+=2){ const a=agents[i]; if(!a.active) continue; const b=agents[(i*7+3)%agents.length]; if(!b.active) continue;
+    const dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy); if(d>0&&d<1.2){ a.x+=dx/d*.1; a.y+=dy/d*.1; } }
+  if(emg){ const meds=Z().filter(z=>z.type==='medical'); let best=null,bd=1e9;
+    meds.forEach(m=>{const d=Math.hypot(m.x+m.w/2-emg.x,m.y+m.h/2-emg.y); if(d<bd){bd=d;best=m;}});
+    emg.target=best;
+    if(best&&bd>1.5){ emg.x+=(best.x+best.w/2-emg.x)/bd*.9; emg.y+=(best.y+best.h/2-emg.y)/bd*.9;
+      $('status').textContent='🚑 응급 이송 중… 의료센터까지 '+(bd*mpu).toFixed(0)+'m';
+    } else if(best){ $('status').textContent='✅ 의료센터 도착 · 이송 소요 '+Math.round((performance.now()-emg.t0)/1000)+'초(시뮬레이션)'; } }
+  raindrops.forEach(r=>{r.y+=r.v;r.x-=1;if(r.y>H){r.y=0;r.x=Math.random()*W}});
+}
+function updateHeat(){
+  const n=Math.floor(NAG*factor(tHour)); const per=D.params.visitors*.5/Math.max(1,n)*factor(tHour);
+  const g=new Float32Array(GX*GY);
+  agents.forEach(a=>{ if(!a.active) return; const ix=Math.min(GX-1,Math.max(0,Math.floor(a.x/(WW/GX)))), iy=Math.min(GY-1,Math.max(0,Math.floor(a.y/(WH/GY)))); g[iy*GX+ix]+=per; });
+  const o=new Float32Array(GX*GY);
+  for(let y=0;y<GY;y++)for(let x=0;x<GX;x++){ let s=0,c=0; for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j; if(xx>=0&&xx<GX&&yy>=0&&yy<GY){const w=(i==0&&j==0)?2:1; s+=g[yy*GX+xx]*w; c+=w;}} o[y*GX+x]=s/c/cellArea; }
+  for(let k=0;k<o.length;k++) heat[k]=heat[k]*.85+o[k]*.15;
+}
+function heatColor(d){ if(d<.12) return null; if(d<.25) return 'rgba(16,185,129,.5)'; if(d<.5) return 'rgba(234,179,8,.65)'; if(d<.9) return 'rgba(249,115,22,.75)'; return 'rgba(239,68,68,.88)'; }
+function drawHeat(ctx,w,h,bg){
+  ctx.clearRect(0,0,w,h);
+  if(bg){ ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,w,h); }
+  const cw=w/GX, ch=h/GY; let peak=0,hot=0,act=0;
+  for(let y=0;y<GY;y++)for(let x=0;x<GX;x++){ const d=heat[y*GX+x]; peak=Math.max(peak,d); if(d>=.12) act++; if(d>=.5) hot++; const c=heatColor(d); if(c){ ctx.fillStyle=c; ctx.fillRect(x*cw,y*ch,cw+.5,ch+.5);} }
+  if(bg){ Z().forEach(z=>{ ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1; ctx.strokeRect(z.x*w/WW,z.y*h/WH,z.w*w/WW,z.h*h/WH);
+      ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='bold 10px Pretendard,sans-serif'; ctx.textAlign='center'; ctx.fillText(z.name,(z.x+z.w/2)*w/WW,(z.y+z.h/2)*h/WH+3,z.w*w/WW); }); }
+  return [peak,hot,act];
+}
+/* ---------- 2D 평면도 ---------- */
+function drawBase(){
+  const T=D.theme; cx.clearRect(0,0,W,H);
+  cx.fillStyle=rain?T.groundRain:T.ground; cx.fillRect(0,0,W,H);
+  if(T.kind==='outdoor'){ cx.fillStyle='rgba(0,0,0,.14)'; for(let x=6;x<W;x+=26){cx.beginPath();cx.arc(x,7,11,0,7);cx.fill();cx.beginPath();cx.arc(x,H-7,11,0,7);cx.fill();} }
+  else { cx.strokeStyle='rgba(0,0,0,.12)'; cx.lineWidth=1; for(let x=0;x<W;x+=W/16){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();} for(let y=0;y<H;y+=H/10){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();} }
+  cx.strokeStyle=T.path; cx.globalAlpha=.6; cx.lineCap='round'; cx.lineWidth=Math.max(4,S*1.6);
+  Z().forEach(z=>{ const g=nearestGate(z); cx.beginPath(); cx.moveTo(g.x*S,g.y*S); cx.lineTo((z.x+z.w/2)*S,(z.y+z.h/2)*S); cx.stroke(); });
+  cx.globalAlpha=1;
+  Z().forEach(z=>{ const x=z.x*S,y=z.y*S,w=z.w*S,h=z.h*S;
+    cx.fillStyle='rgba(0,0,0,.28)'; cx.fillRect(x+3,y+3,w,h);
+    cx.fillStyle=z.color; cx.beginPath(); cx.roundRect(x,y,w,h,7); cx.fill(); cx.strokeStyle='#fff'; cx.lineWidth=2; cx.stroke();
+    cx.textAlign='center'; cx.fillStyle='#fff';
+    cx.font=Math.max(14,Math.min(26,h*.4))+'px sans-serif'; cx.fillText(z.icon,x+w/2,y+h/2-2);
+    cx.font='bold '+Math.max(11,Math.min(15,w/6.5))+'px Pretendard,sans-serif'; cx.shadowColor='rgba(0,0,0,.6)'; cx.shadowBlur=3;
+    cx.fillText(z.name,x+w/2,y+h/2+Math.max(14,Math.min(20,h*.28)),w-6); cx.shadowBlur=0; });
+  D.gates.forEach(g=>{ cx.fillStyle='#1e293b'; cx.beginPath(); cx.arc(g.x*S,g.y*S,10,0,7); cx.fill(); cx.strokeStyle='#fff'; cx.lineWidth=2; cx.stroke();
+    cx.fillStyle='#fff'; cx.font='12px sans-serif'; cx.textAlign='center'; cx.fillText('🚪',g.x*S,g.y*S+4);
+    cx.font='bold 11px Pretendard'; cx.fillStyle='#fff'; cx.shadowColor='#000'; cx.shadowBlur=3; cx.fillText(g.name,g.x*S,g.y*S+(g.y>50?-15:24)); cx.shadowBlur=0; });
+}
+function nearestGate(z){ let b=D.gates[0],bd=1e9; D.gates.forEach(g=>{const d=Math.hypot(g.x-(z.x+z.w/2),g.y-(z.y+z.h/2)); if(d<bd){bd=d;b=g;}}); return b; }
+function drawPeople(){ px.clearRect(0,0,W,H);
+  agents.forEach(a=>{ if(!a.active) return; px.fillStyle=rain?'#93c5fd':'#fff'; px.strokeStyle='rgba(0,0,0,.4)'; px.lineWidth=.8; px.beginPath(); px.arc(a.x*S,a.y*S,3.2,0,7); px.fill(); px.stroke(); });
+  if(emg){ px.strokeStyle='#ef4444'; px.lineWidth=3; px.setLineDash([6,5]);
+    if(emg.target){ px.beginPath(); px.moveTo(emg.x*S,emg.y*S); px.lineTo((emg.target.x+emg.target.w/2)*S,(emg.target.y+emg.target.h/2)*S); px.stroke(); }
+    px.setLineDash([]); px.fillStyle='#ef4444'; px.beginPath(); px.arc(emg.x*S,emg.y*S,9+Math.sin(performance.now()/120)*2,0,7); px.fill();
+    px.fillStyle='#fff'; px.font='bold 12px Pretendard'; px.textAlign='center'; px.fillText('🚑 응급',emg.x*S,emg.y*S-14); }
+  if(rain){ px.strokeStyle='rgba(147,197,253,.55)'; px.lineWidth=1.1; raindrops.forEach(r=>{px.beginPath();px.moveTo(r.x,r.y);px.lineTo(r.x-2,r.y+r.l);px.stroke();}); }
+}
+/* ---------- 3D 아이소메트릭 ---------- */
+let R3=null,S3,C3,G3,bodyM,headM,rainPts,emgGrp,emgLine,heatPlane,heatTex;
+let yaw=.55,pitch=.72,zoom3=1,drag=false,lx=0,ly=0;
+const DUM=new THREE.Object3D();
+function M(c,o){return new THREE.MeshLambertMaterial(Object.assign({color:new THREE.Color(c)},o||{}));}
+function bx(p,w,h,d,c,x,y,z,o){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c,o));m.position.set(x,y,z);p.add(m);return m;}
+function cyl(p,rt,rb,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||12),M(c));m.position.set(x,y,z);p.add(m);return m;}
+function cone(p,r,h,c,x,y,z,seg){const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,seg||8),M(c));m.position.set(x,y,z);p.add(m);return m;}
+function tree(p,x,z){cyl(p,.5,.6,2.4,'#7c4a21',x,1.4,z,8);cone(p,2.3,4.6,'#2f855a',x,4.8,z,8);}
+function seats(p,rows,cols,x0,z0,dx,dz,c){const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,1,1.2),M(c),rows*cols);let k=0;
+  for(let r=0;r<rows;r++)for(let q=0;q<cols;q++){DUM.position.set(x0+q*dx,.9,z0+r*dz);DUM.scale.set(1,1,1);DUM.rotation.set(0,0,0);DUM.updateMatrix();im.setMatrixAt(k++,DUM.matrix);} p.add(im);}
+function labelSprite(text,color){
+  const c=document.createElement('canvas'); c.width=640; c.height=150; const t=c.getContext('2d');
+  t.fillStyle='rgba(255,255,255,.96)'; t.beginPath(); t.roundRect(4,4,632,142,28); t.fill();
+  t.fillStyle=color; t.beginPath(); t.roundRect(4,4,30,142,14); t.fill();
+  t.strokeStyle='rgba(15,23,42,.25)'; t.lineWidth=3; t.beginPath(); t.roundRect(4,4,632,142,28); t.stroke();
+  t.fillStyle='#0f172a'; t.font='bold 66px Pretendard,sans-serif'; t.textAlign='center'; t.textBaseline='middle'; t.fillText(text,340,78,570);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true})); sp.renderOrder=10; return sp;
+}
+function buildZone3(z){
+  const g=new THREE.Group(); const cxz=z.x+z.w/2-WW/2, czz=z.y+z.h/2-WH/2; g.position.set(cxz,0,czz); G3.add(g);
+  const w=z.w,h=z.h; const pale=new THREE.Color(z.color).lerp(new THREE.Color('#ffffff'),.65).getStyle();
+  bx(g,w,.5,h,pale,0,.25,0);
+  let top=8;
+  switch(z.type){
+    case 'stage':{ const s=(czz<0)?1:-1;
+      bx(g,w*.96,3,h*.42,'#7c3aed',0,2,-s*h*.28); bx(g,w*.96,.4,h*.42,'#ddd6fe',0,3.7,-s*h*.28);
+      bx(g,w*.92,z.ht,.9,'#312e81',0,3.5+z.ht/2,-s*h*.48,{emissive:new THREE.Color('#4338ca')});
+      [-1,1].forEach(k=>bx(g,1.2,z.ht+1.5,1.2,'#1e1b4b',k*w*.46,(z.ht+1.5)/2+3.5,-s*h*.48));
+      const rows=Math.max(1,Math.floor((h*.5-2.2)/1.9)+1), cols=Math.max(3,Math.floor((w-3)/1.9));
+      seats(g,rows,cols,-(cols-1)*.95,s*1.4,1.9,s*1.9,'#1e3a8a'); top=z.ht+6; break; }
+    case 'food':{
+      bx(g,w*.9,3,2,'#92400e',0,2,-h*.33);
+      const n=Math.max(3,Math.round(w/3)); for(let i=0;i<n;i++) bx(g,w*.95/n,.5,h*.42,(i%2?'#ffffff':z.color),-w*.475+(i+.5)*w*.95/n,6.4,-h*.28);
+      [-1,1].forEach(k=>{cyl(g,.25,.25,5.8,'#475569',k*w*.46,3.3,-h*.48,8);cyl(g,.25,.25,5.8,'#475569',k*w*.46,3.3,-h*.08,8);});
+      [-1,0,1].forEach(t=>{const x=t*w*.28; cyl(g,1.5,1.5,.3,'#ffffff',x,2,h*.2,16); cyl(g,.3,.3,1.6,'#64748b',x,1.2,h*.2,8); cyl(g,.6,.6,.8,z.color,x-2.2,1,h*.2,10); cyl(g,.6,.6,.8,z.color,x+2.2,1,h*.2,10);});
+      top=8; break; }
+    case 'rest':{
+      bx(g,w*.96,.5,h*.96,'#4fa15a',0,.5,0); bx(g,w*.4,1,1.3,'#a16207',-w*.2,1.3,h*.12); bx(g,w*.4,1,1.3,'#a16207',w*.2,1.3,-h*.12);
+      tree(g,-w*.4,-h*.3); tree(g,w*.4,h*.3); tree(g,w*.38,-h*.36); top=9; break; }
+    case 'medical':{
+      bx(g,w*.8,5,h*.7,'#ffffff',0,3,0); bx(g,w*.82,1,h*.72+.1,'#ef4444',0,2.4,0); bx(g,w*.84,.8,h*.74,'#f1f5f9',0,5.8,0);
+      bx(g,4.2,.3,1.3,'#ef4444',0,6.4,0); bx(g,1.3,.3,4.2,'#ef4444',0,6.4,0); top=8.5; break; }
+    case 'info':{
+      bx(g,w*.6,3,h*.5,'#0ea5e9',0,2,0); bx(g,w*.85,.5,h*.75,'#e0f2fe',0,3.8,0); cyl(g,.2,.2,4.5,'#334155',w*.36,2.8,h*.3,8); cyl(g,1.1,1.1,.4,'#0ea5e9',w*.36,5.2,h*.3,16); top=7.5; break; }
+    case 'restroom':{
+      bx(g,w*.8,4,h*.7,'#e2e8f0',0,2.5,0); bx(g,w*.86,.6,h*.76,'#06b6d4',0,4.8,0);
+      bx(g,1.4,2.4,.2,'#0f172a',-w*.15,1.7,h*.36); bx(g,1.4,2.4,.2,'#0f172a',w*.15,1.7,h*.36); top=7; break; }
+    default:{ /* booth, custom : 텐트 */
+      const px_=w*.38,pz=h*.38; [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(a=>cyl(g,.25,.25,4.8,'#475569',a[0]*px_,2.9,a[1]*pz,8));
+      const roof=new THREE.Mesh(new THREE.ConeGeometry(1,3.4,4),M(z.color)); roof.rotation.y=Math.PI/4; roof.scale.set(w*.72,1,h*.72); roof.position.set(0,6.7,0); g.add(roof);
+      bx(g,w*.5,1.6,h*.22,'#f8fafc',0,1.4,h*.15); [-1,0,1].forEach(k=>bx(g,1.4,1,1.4,z.color,k*w*.16,2.7,h*.15)); top=9.5; }
+  }
+  const sp=labelSprite(z.icon+' '+z.name,z.color); const ww=Math.min(44,Math.max(20,z.name.length*3+12)); sp.scale.set(ww,ww*150/640,1); sp.position.set(0,top+4,0); g.add(sp);
+}
+function wallSide(horiz,fixed,len,gates){
+  const segs=[]; let cur=-len/2; const gs=gates.slice().sort((a,b)=>a-b);
+  gs.forEach(gp=>{ if(gp-7>cur) segs.push([cur,gp-7]); cur=gp+7; }); if(cur<len/2) segs.push([cur,len/2]);
+  segs.forEach(s=>{ const L=s[1]-s[0], mid=(s[0]+s[1])/2;
+    if(horiz) bx(G3,L,5,1.4,'#f8fafc',mid,2.5,fixed); else bx(G3,1.4,5,L,'#f8fafc',fixed,2.5,mid); });
+}
+function buildScene3(){
+  if(G3) S3.remove(G3); G3=new THREE.Group(); S3.add(G3);
+  const T=D.theme; const ground=rain?T.groundRain:T.ground;
+  bx(G3,WW+8,4,WH+8,'#e5e7eb',0,-2.7,0); bx(G3,WW,.7,WH,ground,0,-.35,0);
+  if(T.kind==='outdoor'){ for(let x=-WW/2+4;x<WW/2;x+=14){ tree(G3,x,-WH/2+2.5); tree(G3,x+7,WH/2-2.5); } }
+  const gT=[],gB=[],gL=[],gR=[];
+  D.gates.forEach(g=>{ if(g.y<10) gT.push(g.x-WW/2); else if(g.y>90) gB.push(g.x-WW/2); else if(g.x<10) gL.push(g.y-WH/2); else gR.push(g.y-WH/2); });
+  wallSide(true,-WH/2-.7,WW+2,gT); wallSide(true,WH/2+.7,WW+2,gB); wallSide(false,-WW/2-.7,WH+2,gL); wallSide(false,WW/2+.7,WH+2,gR);
+  const pc=T.path;
+  Z().forEach(z=>{ const g=nearestGate(z); const x1=g.x-WW/2,z1=g.y-WH/2,x2=z.x+z.w/2-WW/2,z2=z.y+z.h/2-WH/2; const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz);
+    const m=bx(G3,L,.3,3.2,pc,(x1+x2)/2,.15,(z1+z2)/2); m.rotation.y=-Math.atan2(dz,dx); });
+  D.gates.forEach(g=>{ const x=g.x-WW/2,zz=g.y-WH/2; const horiz=(g.y<10||g.y>90);
+    const ox=horiz?6:0, oz=horiz?0:6;
+    bx(G3,1.6,8,1.6,'#1e293b',x-ox,4,zz-oz); bx(G3,1.6,8,1.6,'#1e293b',x+ox,4,zz+oz);
+    bx(G3,horiz?14:1.8,1.4,horiz?1.8:14,'#1e293b',x,8,zz);
+    const sp=labelSprite('🚪 '+g.name,'#1e293b'); sp.scale.set(24,24*150/640,1); sp.position.set(x,13,zz); G3.add(sp); });
+  Z().forEach(buildZone3);
+  $('zlist').innerHTML=Z().map(z=>`<span style="--c:${z.color}">${z.icon} ${z.name}</span>`).join(''); $('zCnt').textContent='('+Z().length+'개)';
+}
+function initR3(){
+  const el=$('c3'); try{ R3=new THREE.WebGLRenderer({antialias:true}); }catch(e){ R3=null; is3d=false; $('hint').textContent='이 브라우저는 3D를 지원하지 않아 2D로 표시합니다'; return; }
+  el.appendChild(R3.domElement);
+  S3=new THREE.Scene(); S3.add(new THREE.AmbientLight(0xffffff,.82)); const dl=new THREE.DirectionalLight(0xffffff,.65); dl.position.set(-60,120,50); S3.add(dl);
+  C3=new THREE.OrthographicCamera(-1,1,1,-1,-800,1200);
+  const N=NAG; bodyM=new THREE.InstancedMesh(new THREE.CylinderGeometry(.55,.65,2.4,8),M('#f97316'),N); headM=new THREE.InstancedMesh(new THREE.SphereGeometry(.7,10,8),M('#fde68a'),N);
+  bodyM.frustumCulled=false; headM.frustumCulled=false; S3.add(bodyM); S3.add(headM);
+  const rp=new Float32Array(500*3); for(let i=0;i<500;i++){rp[i*3]=(Math.random()-.5)*WW;rp[i*3+1]=Math.random()*60;rp[i*3+2]=(Math.random()-.5)*WH;}
+  rainPts=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(rp,3)),new THREE.PointsMaterial({color:0x60a5fa,size:1.2})); rainPts.visible=false; rainPts.frustumCulled=false; S3.add(rainPts);
+  emgGrp=new THREE.Mesh(new THREE.SphereGeometry(1.8,16,12),new THREE.MeshBasicMaterial({color:0xef4444})); emgGrp.visible=false; S3.add(emgGrp);
+  emgLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineBasicMaterial({color:0xef4444})); emgLine.visible=false; emgLine.frustumCulled=false; S3.add(emgLine);
+  heatTex=new THREE.CanvasTexture(hm); heatPlane=new THREE.Mesh(new THREE.PlaneGeometry(WW,WH),new THREE.MeshBasicMaterial({map:heatTex,transparent:true,opacity:.8,depthWrite:false})); heatPlane.rotation.x=-Math.PI/2; heatPlane.position.y=.5; heatPlane.visible=false; S3.add(heatPlane);
+  const e=R3.domElement;
+  e.onmousedown=ev=>{drag=true;lx=ev.clientX;ly=ev.clientY;}; window.addEventListener('mouseup',()=>drag=false);
+  e.onmousemove=ev=>{ if(!drag)return; yaw-=(ev.clientX-lx)*.008; pitch=Math.min(1.35,Math.max(.3,pitch+(ev.clientY-ly)*.006)); lx=ev.clientX; ly=ev.clientY; };
+  e.addEventListener('wheel',ev=>{ev.preventDefault(); zoom3=Math.min(3.2,Math.max(.6,zoom3*(ev.deltaY<0?1.1:.9)));},{passive:false});
+  e.addEventListener('touchstart',ev=>{drag=true;lx=ev.touches[0].clientX;ly=ev.touches[0].clientY;},{passive:true});
+  e.addEventListener('touchmove',ev=>{ if(!drag)return; const t=ev.touches[0]; yaw-=(t.clientX-lx)*.008; pitch=Math.min(1.35,Math.max(.3,pitch+(t.clientY-ly)*.006)); lx=t.clientX; ly=t.clientY;},{passive:true});
+  e.addEventListener('touchend',()=>drag=false);
+  size3(); buildScene3();
+}
+function size3(){ if(!R3) return; const el=$('c3'); const w=el.clientWidth,h=el.clientHeight; R3.setPixelRatio(Math.min(2,window.devicePixelRatio||1)); R3.setSize(w,h); const f=72,asp=w/h; C3.left=-f*asp; C3.right=f*asp; C3.top=f; C3.bottom=-f; C3.updateProjectionMatrix(); }
+function render3(){
+  if(!R3) return; const Rr=400;
+  C3.position.set(Math.sin(yaw)*Math.cos(pitch)*Rr,Math.sin(pitch)*Rr,Math.cos(yaw)*Math.cos(pitch)*Rr); C3.lookAt(0,0,0); C3.zoom=zoom3; C3.updateProjectionMatrix();
+  for(let i=0;i<agents.length;i++){ const a=agents[i]; const s=a.active?1:0.0001; DUM.rotation.set(0,0,0); DUM.scale.set(s,s,s);
+    DUM.position.set(a.x-WW/2,1.7,a.y-WH/2); DUM.updateMatrix(); bodyM.setMatrixAt(i,DUM.matrix); DUM.position.y=3.6; DUM.updateMatrix(); headM.setMatrixAt(i,DUM.matrix); }
+  bodyM.instanceMatrix.needsUpdate=true; headM.instanceMatrix.needsUpdate=true; bodyM.material.color.set(rain?'#2563eb':'#f97316');
+  rainPts.visible=rain; if(rain){ const p=rainPts.geometry.attributes.position; for(let i=0;i<500;i++){ let y=p.getY(i)-1.4; if(y<0) y=60; p.setY(i,y);} p.needsUpdate=true; }
+  if(emg){ emgGrp.visible=true; emgGrp.position.set(emg.x-WW/2,3,emg.y-WH/2); const sc=1+Math.sin(performance.now()/120)*.25; emgGrp.scale.set(sc,sc,sc);
+    if(emg.target){ emgLine.visible=true; const tp=emgLine.geometry.attributes.position; tp.setXYZ(0,emg.x-WW/2,3,emg.y-WH/2); tp.setXYZ(1,emg.target.x+emg.target.w/2-WW/2,3,emg.target.y+emg.target.h/2-WH/2); tp.needsUpdate=true; } }
+  else { emgGrp.visible=false; emgLine.visible=false; }
+  heatPlane.visible=heat3; if(heat3) heatTex.needsUpdate=true;
+  R3.render(S3,C3);
+}
+/* ---------- 루프 & 컨트롤 ---------- */
+let last=performance.now(), kt=0;
+function loop(now){ const dt=(now-last)/1000; last=now;
+  if(sim){ step(dt); }
+  updateHeat(); const r=drawHeat(hx,W,H,false); drawHeat(h2,W2,H2,true);
+  if(is3d) render3(); else drawPeople();
+  const n=Math.round(D.params.visitors*.5*factor(tHour)); $('peopleTxt').textContent='시뮬레이션 군중 ≈ '+n.toLocaleString()+'명';
+  kt+=dt; if(kt>.4){ kt=0; $('kPeak').textContent=r[0].toFixed(2)+' 명/㎡'; $('kBott').textContent=(r[2]?Math.round(100*r[1]/r[2]):0)+'%';
+    const de=mode==='after'?D.detail:D.before_detail; $('kMed').textContent=Math.round(de.t_max)+'초'; $('kRisk').textContent=de.risk_zones+'개소'; }
+  requestAnimationFrame(loop);
+}
+function setView(v3){ if(v3&&!R3) return; is3d=v3; $('c3').style.display=v3?'block':'none'; [cv,hm,pp].forEach(c=>c.style.display=v3?'none':'block');
+  hm.style.display=v3?'none':'block'; $('b3d').className=v3?'on':''; $('b2d').className=v3?'':'on'; $('hint').style.display=v3?'block':'none'; $('bHeat3').style.display=v3?'inline-block':'none';
+  if(v3) size3(); }
+function togHeat3(){ heat3=!heat3; $('bHeat3').className=heat3?'on':''; }
+function setMode(m){ mode=m; $('bMode').className=m==='after'?'on':''; $('bModeB').className=m==='before'?'on':'';
+  $('verTxt').textContent=m==='after'?'· AI 최적 배치(종합 '+D.total.toFixed(1)+'점)':'· 설계 전(종합 '+D.before_total.toFixed(1)+'점)';
+  heat.fill(0); initAgents(); emg=null; $('bEmg').className='danger'; $('bEmg').textContent='🚨 응급환자 발생'; drawBase(); if(R3) buildScene3(); $('status').textContent='실시간 군중 시뮬레이션'; }
+function togSim(){ sim=!sim; $('bPlay').textContent=sim?'⏸ 시뮬레이션 정지':'▶ 시뮬레이션 시작'; }
+function togRain(){ rain=!rain; const b=$('bRain'); b.className='warn'+(rain?' on':''); b.textContent=rain?'🌧️ 우천(ON)':'🌧️ 우천'; $('envTxt').textContent=rain?'🌧️ 우천: 무대 쪽으로 대피':'일반 상태';
+  agents.forEach(a=>{ if(!rain&&!a.leaving) setTarget(a); }); drawBase(); if(R3) buildScene3(); }
+function togEmg(){ const b=$('bEmg');
+  if(emg){ emg=null; b.className='danger'; b.textContent='🚨 응급환자 발생'; $('status').textContent='실시간 군중 시뮬레이션'; return; }
+  const Zs=Z().filter(z=>z.type!=='medical'); const z=Zs[Math.floor(Math.random()*Zs.length)];
+  emg={x:z.x+z.w/2,y:z.y+z.h+2,trail:[],t0:performance.now(),target:null}; b.className='danger on'; b.textContent='🚨 응급 해제'; sim=true; $('bPlay').textContent='⏸ 시뮬레이션 정지'; }
+function setTime(h){ tHour=h; $('tSl').value=h; $('tTxt').textContent=h+':00'; $('tDesc').textContent=descT(h); }
+function togTl(){ const b=$('bTl'); if(tlTimer){clearInterval(tlTimer);tlTimer=null;b.textContent='▶ 재생';} else { b.textContent='⏸ 일시정지'; tlTimer=setInterval(()=>{ let n=tHour+1; if(n>20)n=10; setTime(n); },2500); } }
+window.addEventListener('resize',resize);
+setTime(14); resize(); initR3(); setView(is3d&&!!R3); setMode('after'); resize(); requestAnimationFrame(loop);
+</script></body></html>
+"""
 
-    window.addEventListener('load', () => {
-      venueCanvas = document.getElementById('venueCanvas');
-      peopleCanvas = document.getElementById('peopleCanvas');
-      heatmapCanvas = document.getElementById('heatmapCanvas');
 
-      const wrap = document.getElementById('mapWrap');
-      const w = wrap.clientWidth;
-      const h = wrap.clientHeight;
-
-      [venueCanvas, peopleCanvas, heatmapCanvas].forEach(c => {
-        c.width = w; c.height = h;
-      });
-
-      venueCtx = venueCanvas.getContext('2d');
-      peopleCtx = peopleCanvas.getContext('2d');
-      heatmapCtx = heatmapCanvas.getContext('2d');
-
-      initPeople(w, h);
-      initRain(w, h);
-      drawVenue(w, h);
-      renderLoop();
-    });
-
-    function initPeople(w, h) {
-      people = [];
-      for(let i=0; i<60; i++){
-        people.push({
-          x: w*0.1 + Math.random()*w*0.8,
-          y: h*0.2 + Math.random()*h*0.7,
-          vx: (Math.random()-0.5)*1.2,
-          vy: (Math.random()-0.5)*1.2,
-          speed: 1.0
-        });
-      }
-    }
-
-    function initRain(w, h) {
-      raindrops = [];
-      for(let i=0; i<80; i++){
-        raindrops.push({x: Math.random()*w, y: Math.random()*h, len: 10, vy: 5+Math.random()*5});
-      }
-    }
-
-    function drawVenue(w, h) {
-      venueCtx.fillStyle = isRain ? '#254e2b' : '#3a7d44';
-      venueCtx.fillRect(0, 0, w, h);
-
-      venueCtx.fillStyle = isRain ? '#377341' : '#4fa15a';
-      venueCtx.beginPath();
-      venueCtx.ellipse(w*0.5, h*0.55, w*0.25, h*0.22, 0, 0, Math.PI*2);
-      venueCtx.fill();
-
-      Object.keys(booths).forEach(k => {
-        const b = booths[k];
-        const bx = b.x * w - (b.bw * w)/2;
-        const by = b.y * h - (b.bh * h)/2;
-        const bw = b.bw * w;
-        const bh = b.bh * h;
-
-        venueCtx.fillStyle = 'rgba(0,0,0,0.2)';
-        venueCtx.fillRect(bx+3, by+3, bw, bh);
-
-        venueCtx.fillStyle = b.color;
-        venueCtx.beginPath();
-        venueCtx.roundRect(bx, by, bw, bh, 8);
-        venueCtx.fill();
-
-        venueCtx.strokeStyle = '#ffffff';
-        venueCtx.lineWidth = 1.5;
-        venueCtx.stroke();
-
-        venueCtx.fillStyle = '#ffffff';
-        venueCtx.font = 'bold 11px Pretendard';
-        venueCtx.textAlign = 'center';
-        venueCtx.fillText(`${b.icon} ${b.title}`, bx + bw/2, by + bh/2 + 4);
-      });
-    }
-
-    function renderLoop() {
-      if (simRunning) {
-        updateSim();
-      }
-      if (venueCanvas) {
-        drawPeople(venueCanvas.width, venueCanvas.height);
-        drawHeatmap(venueCanvas.width, venueCanvas.height);
-      }
-      requestAnimationFrame(renderLoop);
-    }
-
-    function updateSim() {
-      const w = venueCanvas.width, h = venueCanvas.height;
-      people.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if(p.x < 10 || p.x > w-10) p.vx *= -1;
-        if(p.y < 10 || p.y > h-10) p.vy *= -1;
-      });
-      if (isRain) {
-        raindrops.forEach(r => {
-          r.y += r.vy; if(r.y > h) r.y = 0;
-        });
-      }
-    }
-
-    function drawPeople(w, h) {
-      peopleCtx.clearRect(0,0,w,h);
-      people.forEach(p => {
-        peopleCtx.fillStyle = isRain ? '#60a5fa' : '#ffffff';
-        peopleCtx.beginPath();
-        peopleCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
-        peopleCtx.fill();
-      });
-
-      if (isEmergency && emergencyPos) {
-        peopleCtx.strokeStyle = '#ef4444';
-        peopleCtx.lineWidth = 3;
-        peopleCtx.setLineDash([5,5]);
-        peopleCtx.beginPath();
-        peopleCtx.moveTo(emergencyPos.x, emergencyPos.y);
-        peopleCtx.lineTo(booths.medical.x * w, booths.medical.y * h);
-        peopleCtx.stroke();
-        peopleCtx.setLineDash([]);
-
-        peopleCtx.fillStyle = '#ef4444';
-        peopleCtx.beginPath();
-        peopleCtx.arc(emergencyPos.x, emergencyPos.y, 7, 0, Math.PI*2);
-        peopleCtx.fill();
-      }
-
-      if (isRain) {
-        peopleCtx.strokeStyle = 'rgba(147, 197, 253, 0.4)';
-        raindrops.forEach(r => {
-          peopleCtx.beginPath();
-          peopleCtx.moveTo(r.x, r.y);
-          peopleCtx.lineTo(r.x-1, r.y+r.len);
-          peopleCtx.stroke();
-        });
-      }
-    }
-
-    function drawHeatmap(w, h) {
-      heatmapCtx.clearRect(0,0,w,h);
-      const grid = {};
-      people.forEach(p => {
-        const gx = Math.floor(p.x / 40), gy = Math.floor(p.y / 40);
-        const k = `${gx}_${gy}`;
-        grid[k] = (grid[k] || 0) + 1;
-      });
-      Object.keys(grid).forEach(k => {
-        const [gx, gy] = k.split('_').map(Number);
-        const count = grid[k];
-        if (count >= 2) {
-          const cx = gx * 40 + 20, cy = gy * 40 + 20;
-          let grad = heatmapCtx.createRadialGradient(cx, cy, 0, cx, cy, count*10);
-          grad.addColorStop(0, count >= 4 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(245, 158, 11, 0.6)');
-          grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-          heatmapCtx.fillStyle = grad;
-          heatmapCtx.beginPath();
-          heatmapCtx.arc(cx, cy, count*10, 0, Math.PI*2);
-          heatmapCtx.fill();
-        }
-      });
-    }
-
-    function toggleSim() {
-      simRunning = !simRunning;
-      document.getElementById('btnToggleSim').textContent = simRunning ? '⏸ 시뮬레이션 일시정지' : '▶ 시뮬레이션 시작';
-      document.getElementById('simTimer').textContent = simRunning ? '상태: 군중 이동 시뮬레이션 중 ▶' : '상태: 대기중';
-    }
-
-    function toggleRainEnv() {
-      isRain = !isRain;
-      document.getElementById('btnRain').classList.toggle('active', isRain);
-      document.getElementById('btnRain').textContent = isRain ? '🌧️ 우천 모드 (ON)' : '🌧️ 우천 모드';
-      document.getElementById('envBadge').textContent = isRain ? '🌧️ 강우 발생' : '일반 상태';
-      drawVenue(venueCanvas.width, venueCanvas.height);
-    }
-
-    function triggerEmergencyEnv() {
-      isEmergency = !isEmergency;
-      document.getElementById('btnEmergency').classList.toggle('active', isEmergency);
-      document.getElementById('btnEmergency').textContent = isEmergency ? '🚨 응급상황 해제' : '🚨 응급환자 후송';
-      if (isEmergency) {
-        emergencyPos = {x: venueCanvas.width * 0.25, y: venueCanvas.height * 0.5};
-        if (!simRunning) toggleSim();
-      } else {
-        emergencyPos = null;
-      }
-      document.getElementById('envBadge').textContent = isEmergency ? '🚨 응급 환자 이송 중' : '일반 상태';
-    }
-
-    function updateTimeSimulation(val) {
-      document.getElementById('timeDisplay').textContent = `${val}:00`;
-    }
-
-    function toggleTimelinePlay() {}
-
-    function sendMainAiMsg() {
-      const input = document.getElementById('mainAiInput');
-      const txt = input.value.trim();
-      if(!txt) return;
-      const chatBox = document.getElementById('mainAiChatBox');
-      chatBox.innerHTML += `<div class="chat-msg-user"><b>나:</b> ${txt}</div>`;
-      input.value = '';
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      setTimeout(() => {
-        chatBox.innerHTML += `<div class="chat-msg-ai"><b>AI:</b> 요청하신 "${txt}" 내용을 분석하여 디지털 트윈 배치도와 XAI 평가 지표를 갱신했습니다.</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }, 500);
-    }
-
-    function toggle3DView() {
-      is3DActive = !is3DActive;
-      const container = document.getElementById('container3D');
-      const btn = document.getElementById('btnToggle3D');
-      container.style.display = is3DActive ? 'block' : 'none';
-      btn.textContent = is3DActive ? '🗺️ 2D 평면도 보기' : '🧊 3D 입체뷰 보기';
-      if (is3DActive) init3D();
-    }
-
-    function init3D() {
-      const container = document.getElementById('container3D');
-      container.innerHTML = '';
-      const w = container.clientWidth, h = container.clientHeight;
-      scene3D = new THREE.Scene();
-      scene3D.background = new THREE.Color(0x0f172a);
-      camera3D = new THREE.PerspectiveCamera(45, w/h, 0.1, 1000);
-      camera3D.position.set(0, 140, 160);
-      camera3D.lookAt(0,0,0);
-      renderer3D = new THREE.WebGLRenderer({antialias:true});
-      renderer3D.setSize(w, h);
-      container.appendChild(renderer3D.domElement);
-
-      scene3D.add(new THREE.AmbientLight(0xffffff, 0.7));
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(50, 100, 50);
-      scene3D.add(dirLight);
-
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(180, 120), new THREE.MeshLambertMaterial({color: 0x2e7d32}));
-      ground.rotation.x = -Math.PI/2;
-      scene3D.add(ground);
-
-      Object.keys(booths).forEach(k => {
-        const b = booths[k];
-        const bw = b.bw * 180, bh = b.bh * 120;
-        const bx = (b.x - 0.5) * 180, bz = (b.y - 0.5) * 120;
-        const height = k === 'stage' ? 16 : 10;
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(bw, height, bh), new THREE.MeshLambertMaterial({color: parseInt(b.color.replace('#','0x'))}));
-        mesh.position.set(bx, height/2, bz);
-        scene3D.add(mesh);
-      });
-
-      function animate() {
-        if(is3DActive) {
-          requestAnimationFrame(animate);
-          scene3D.rotation.y += 0.002;
-          renderer3D.render(scene3D, camera3D);
-        }
-      }
-      animate();
-    }
-    </script>
-    </body>
-    </html>
-    """
-    components.html(EVENT_AI_HTML, height=750, scrolling=True)
-
-# ==========================================
-# 3. AI 설계 프로세스 화면 (Process Page)
-# ==========================================
-elif st.session_state['page'] == 'process':
-    st.markdown("## ⚙️ AI 행사 설계 프로세스 (Workflow)")
-    st.caption("기획부터 최종 최적화 설계안 도출까지의 전체 운영 흐름도입니다.")
-
-    col_w1, col_w2, col_w3, col_w4, col_w5 = st.columns(5)
-    with col_w1:
-        st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
-                <h3>📋</h3>
-                <h4>1단계: 정보 입력</h4>
-                <p style="font-size: 0.85rem; color: #64748B;">예산, 목적, 예상 관람객 및 맞춤 부스 요구사항 입력</p>
-            </div>
-        """, unsafe_allow_html=True)
-    with col_w2:
-        st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
-                <h3>🌐</h3>
-                <h4>2단계: 디지털 트윈</h4>
-                <p style="font-size: 0.85rem; color: #64748B;">장소 지형 데이터를 바탕으로 3D 가상 공간 구축</p>
-            </div>
-        """, unsafe_allow_html=True)
-    with col_w3:
-        st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
-                <h3>🤖</h3>
-                <h4>3단계: 자동 배치</h4>
-                <p style="font-size: 0.85rem; color: #64748B;">수천 개의 행사 배치안 및 강화학습 시뮬레이션 수행</p>
-            </div>
-        """, unsafe_allow_html=True)
-    with col_w4:
-        st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
-                <h3>🚑</h3>
-                <h4>4단계: 다목적 최적화</h4>
-                <p style="font-size: 0.85rem; color: #64748B;">군중 이동 동선 분석, 병목 예방 및 응급 경로 최적화</p>
-            </div>
-        """, unsafe_allow_html=True)
-    with col_w5:
-        st.markdown("""
-            <div class="custom-card" style="text-align: center; min-height: 200px;">
-                <h3>📄</h3>
-                <h4>5단계: XAI 리포트</h4>
-                <p style="font-size: 0.85rem; color: #64748B;">설명 가능한 AI(XAI) 근거 및 최종 비교 리포트 출력</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.info("💡 **운영자 기대 효과:** 운영자는 객관적인 데이터를 기반으로 안전하고 효율적인 대규모 행사를 신속하게 기획할 수 있습니다.")
-
-# ==========================================
-# 4. 시스템 설정 화면 (Settings Page)
-# ==========================================
-elif st.session_state['page'] == 'settings':
-    st.markdown("## ⚙️ 시스템 설정 및 관리")
-
-    with st.container():
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
-        st.subheader("👤 계정 및 사용자 프로필")
-        st.session_state['username'] = st.text_input("사용자 이름", value=st.session_state['username'])
-        st.text_input("소속 부서 / 조직", value="이벤트 기획 1팀")
-        st.text_input("이메일 주소", value="user@event-on.ai")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with st.container():
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
-        st.subheader("🖥️ AI 디지털 트윈 엔진 옵션")
-        st.toggle("도면 내 레이블 및 좌표 가이드 표시", value=True)
-        st.toggle("실시간 군중 시뮬레이션 자동 실행", value=True)
-        st.selectbox("AI 추론 모델 선택", ["EventOn-Engine v4.2 (최신/권장)", "EventOn-Lite"])
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    if st.button("로그아웃", type="primary"):
-        st.session_state['logged_in'] = False
-        st.session_state['page'] = 'home'
-        st.rerun()
+def build_twin_html(result: dict) -> str:
+    data = dict(
+        zones=result["zones"], before_zones=result["before_zones"], gates=result["gates"],
+        theme=result["theme"], params=dict(visitors=result["params"]["visitors"]), mpu=result["mpu"],
+        total=result["total"], before_total=result["before_total"],
+        detail=dict(t_max=result["detail"]["t_max"], risk_zones=result["detail"]["risk_zones"]),
+        before_detail=dict(t_max=result["before_detail"]["t_max"], risk_zones=result["before_detail"]["risk_zones"]),
+    )
+    return TWIN_TEMPLATE.replace("__DATA__", json.dumps(data, ensure_ascii=False))
