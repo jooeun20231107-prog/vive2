@@ -58,9 +58,10 @@ with st.sidebar.form("event_form"):
         "행사 목적",
         ["문화 예술 공연", "기술 전시 및 박람회", "지역 축제", "기업 행사"],
     )
+    # [수정 완료] min_p -> min_value로 수정
     budget = st.slider(
         "예산 (원)",
-        min_p=10000000,
+        min_value=10000000,
         max_value=500000000,
         value=150000000,
         step=10000000,
@@ -103,7 +104,7 @@ with tab1:
         st.success("✨ 최적의 행사장 설계가 완료되었습니다!")
 
     # 레이아웃 분할 (좌측: 배치도 시각화, 우측: 실시간 군중 및 구역 정보)
-    col1, col2 = st.column([2, 1])
+    col1, col2 = st.columns([2, 1])
 
     with col1:
         # 가상의 행사장 좌표 데이터 생성 (디지털 트윈 배치도)
@@ -172,7 +173,6 @@ with tab1:
             for b in booths:
                 st.markdown(f"- ✅ `{b}` 자동 최적 배치 완료")
         else:
-        # 기본값 표시
             st.markdown("- ℹ️ 기본 추천 부스가 적용되었습니다.")
 
 with tab2:
@@ -245,7 +245,4 @@ with tab3:
     col_btn1, col_btn2 = st.columns([1, 1])
     with col_btn1:
         if st.button("📥 최종 설계안 다운로드 (PDF)"):
-            st.success("설계 리포트 PDF가 다운로드되었습니다!")
-    with col_btn2:
-        if st.button("📤 3D 디지털 트윈 환경 내보내기"):
-            st.success("디지털 트윈 데이터가 성공적으로 전송되었습니다!")
+            st.success("설계 리포트
