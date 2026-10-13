@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 커스텀 스타일 정의 (사이드바 하단 고정 구조 적용)
+# 커스텀 스타일 정의 (사이드바 상단/하단 완전 분리 레이아웃)
 st.markdown("""
     <style>
     /* 전체 배경 및 폰트 */
@@ -56,22 +56,12 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* 사이드바 맨 아래 고정 레이아웃 */
-    [data-testid="stSidebar"] {
-        background-color: #F8FAFC;
-    }
+    /* 사이드바 내부 전체를 flex로 설정하여 상단과 하단을 양 끝으로 배치 */
     [data-testid="stSidebar"] > div:first-child {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100vh;
-    }
-    .sidebar-top-content {
-        display: flex;
-        flex-direction: column;
-    }
-    .sidebar-bottom-content {
-        margin-bottom: 30px;
+        height: 88vh;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -84,25 +74,24 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = "주은님"
 
-# 사이드바 구성 (상단과 하단 영역 완벽 분리)
+# 사이드바 구성 (상단은 위로, 하단은 맨 밑으로 자동 분리)
 with st.sidebar:
-    st.markdown('<div class="sidebar-top-content">', unsafe_allow_html=True)
-    if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
-        st.session_state['page'] = 'home'
-        st.rerun()
-
-    st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
-    st.divider()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # 하단 영역 (무조건 맨 밑으로 고정)
-    st.markdown('<div class="sidebar-bottom-content">', unsafe_allow_html=True)
-    if st.session_state['logged_in']:
-        st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
-        if st.button("로그아웃", key="sidebar_logout", use_container_width=True):
-            st.session_state['logged_in'] = False
+    # --- [상단 영역] 이벤트 온 로고 및 설명, 구분선 ---
+    with st.container():
+        if st.button("🎪 이벤트 온 (Event-On)", key="logo_btn", use_container_width=True, type="primary"):
+            st.session_state['page'] = 'home'
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+
+        st.caption("AI 기반 행사 공간 자동 설계 플랫폼")
+        st.divider()
+
+    # --- [하단 영역] 주은님 프로필 및 로그아웃 버튼 (맨 밑으로 고정) ---
+    with st.container():
+        if st.session_state['logged_in']:
+            st.markdown(f"👤 **{st.session_state['username']}** 님 (총괄 기획)")
+            if st.button("로그아웃", key="sidebar_logout", use_container_width=True):
+                st.session_state['logged_in'] = False
+                st.rerun()
 
 # 상단 헤더 영역
 top_col1, top_col2 = st.columns([3, 1])
